@@ -5,7 +5,7 @@
 | Limitation | Effect | Mitigation / how communicated |
 |-----------|--------|-------------------------------|
 | 10 m pixels; mixed shoreline pixels | Area error, larger when reservoir is small | Edge sensitivity range; uncertainty band |
-| DEM vertical error (metres) | Volume uncertainty, largest early in filling | Two DEMs; report ranges; sanity-check vs official capacity |
+| DEM vertical error (metres) | Volume uncertainty, largest early in filling. At FSL, 1 m of offset ≈ 30 MCM (4.4%); SRTM averages 1.7 m below GLO-30 in the mask and gives +52 MCM at FSL (prompt 04) | Two DEMs; report ranges; sanity-check vs official capacity. Area→volume (the Phase 2 path) is much less sensitive to a uniform offset than level→volume |
 | DEM may include early construction works | Valley shape slightly wrong near dam | GLO-30 tiles over Thwake acquired 2010-12 to 2014-05, before construction started (2018-03-27); SRTM is 2000 |
 | Low reservoir rim (saddles) | In the pre-dam DEM the basin overflows ~1 m above FSL (open questions 17, 20), so DEM error can open or close a rim pass | Wall burned in as a barrier; downstream-leak and search-edge checks stop the pipeline; AOI closes passes explicitly and lists them |
 | Clouds (S2) | Gaps | Sentinel-1 fills gaps; DEM gap-fill method |

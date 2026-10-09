@@ -44,6 +44,8 @@ paths:
   aoi: data/baseline/aoi.geojson
   max_extent: data/baseline/max_extent.geojson
   aev_curve: data/baseline/aev_curve_v1.csv
+  aev_metadata: data/baseline/aev_curve_v1.json   # provenance + checks for the CSV
+  aev_figure: media/aev_curve_v1.png
   timeseries: data/processed/thwake_timeseries.csv
   official_figures: data/external/official_figures.csv
 

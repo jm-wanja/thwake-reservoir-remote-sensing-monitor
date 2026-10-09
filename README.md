@@ -4,7 +4,7 @@
 
 An independent, satellite-based record of **Thwake Dam reservoir** (Makueni/Kitui, Kenya) — how fast it fills, whether the water is clean, and what it changes in the region. Built entirely on free, public data.
 
-> **Status:** Phase 1 (pre-filling baseline) in progress — reservoir extent mapped (30.4 km² at full supply level vs ~29 km² official). Next: volume curve, then a validation phase before filling, officially targeted for early 2027.
+> **Status:** Phase 1 (pre-filling baseline) in progress — reservoir extent mapped (30.4 km² at full supply level vs ~29 km² official); draft volume curve gives 743–796 MCM at full supply level from two elevation models (design: 688 MCM). Next: baseline freeze, then a validation phase before filling, officially targeted for early 2027.
 
 ## Live links
 

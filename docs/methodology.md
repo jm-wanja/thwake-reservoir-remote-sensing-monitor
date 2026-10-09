@@ -22,6 +22,27 @@ How the science works, in enough detail to implement and to explain publicly. Th
 - Compute with **Copernicus GLO-30** (primary) and **SRTM** (cross-check). The spread between them is one input to volume uncertainty.
 - Sanity check: volume at FSL should be in the same ballpark as the official ~681–688 MCM. A large mismatch indicates wrong FSL, AOI, or DEM issues — investigate before freezing.
 - **Freeze** as `aev_curve_v1.csv` before analysing filling data.
+- *Implementation (prompt 04, `thwake baseline --step aev`; `src/thwake/volume.py`, `baseline.py`):*
+  - **Mask:** both DEMs use the same frozen GLO-30 max extent (`max_extent.geojson`), rasterised on each DEM's native 1″ grid (pixel centre inside). The two grids coincide. Curve differences therefore reflect valley shape only. SRTM pixels inside the mask but above FSL (0.31 km²) are simply dry at every level.
+  - **Server-side reduction:** Earth Engine sums, per 0.5 m elevation bin *k* = ⌊(FSL − z)/step⌋, the pixel area Σa and Σa·(FSL − z) (`ee.Image.pixelArea`, one grouped `reduceRegion`). Area and volume at every level then follow exactly by cumulative sums: volume(*h*ⱼ) = Σ_{k≥j} Σa·(FSL − z) − j·step·area(*h*ⱼ). The pure-Python reference (`volume.bin_sums`) is unit-tested on a synthetic cone and V-trough, where the build is within 0.5% (cone, at FSL) and within one pixel column (trough) of the exact geometry.
+  - **Curve:** from one step below the lowest pixel in the mask (area 0) to FSL. As defined above, pixels ≤ *h* inside the mask count even if a local sill would cut them off at that level. This has a small effect at low levels.
+  - **Interpolation (Phase 2):** linear between levels for area→level, level→volume and area→volume. With 0.5 m steps, the volume interpolation error is ≤ Δarea·step/8 (≈0.02 MCM near FSL). Values outside the curve raise an error rather than being extrapolated.
+  - **Rim check (reported, never used to re-mask):** each DEM is flood-filled with the wall barrier only (§1.2), and the step reports the level at which its basin first reaches the downstream check point and the rim pixels joining it to the downstream basin. If the DEM holds at FSL, the step also compares its own fill with the mask.
+  - **Outputs:** `data/baseline/aev_curve_v1.csv` (both DEMs, schema in architecture §6), `aev_curve_v1.json` (provenance, capacity check, rim check, DEM difference) and `media/aev_curve_v1.png`.
+  - **Results (draft, 2026-10-09; not frozen):**
+
+    | | Copernicus GLO-30 (2010–14) | SRTM (Feb 2000) |
+    |---|---|---|
+    | Lowest elevation in mask | 836.5 m | 828.0 m |
+    | Area at FSL | 30.36 km² | 30.04 km² |
+    | Volume at FSL | **743.4 MCM** | **795.8 MCM** |
+    | vs design 688 MCM | +8.1% | +15.7% |
+    | vs design history 681 / 825 MCM | +9.2% / −9.9% (inside range) | +16.9% / −3.5% (inside range) |
+    | dV/dh at FSL | 30.1 MCM per m | 29.9 MCM per m |
+    | First rim overflow (wall barrier only) | ≈913.0 m, pass (a) | **≈910.0 m, pass (a): below FSL** |
+
+    Inside the mask, SRTM − GLO-30 = −1.7 m on average (median −1.9 m, 5–95% −5.9 to +3.4 m). Within 500 m of the wall it is −1.8 m: there is no sign of a local artefact at the dam site. Both volumes are within 20% of the design value, so no investigation was triggered.
+  - **Reading the gap:** dV/dh ≈ 30 MCM per metre at FSL, so GLO-30's +55 MCM is equivalent to a uniform vertical offset of ≈1.8 m between the DEM and the design survey (or in the FSL datum). That is within "a few metres" of DEM error. Possible contributors, none of them quantified: different vertical datums (GLO-30 EGM2008, SRTM EGM96; the datum of the 912 m design FSL is unknown, open question 22); the mask being 4.7% larger than the official ~29 km²; and the design curve coming from a different survey. Converting area to volume, the way Phase 2 uses the curve, is much less sensitive to such offsets. For the same area the two DEMs agree closely: 29 km² gives 696.4 (GLO-30) vs 696.2 MCM (SRTM), and 15 km² gives 262.6 vs 249.4 MCM.
 
 ### 1.4 Pre-filling reference
 - Land cover in the flood zone (ESA WorldCover 10 m; Dynamic World for recent dates) → hectares of cropland, shrub, trees, built-up to be flooded.

@@ -7,8 +7,8 @@ All free. Earth Engine IDs are as known at planning time — ⚠️ verify curre
 | Sentinel-2 L2A (surface reflectance) | Water mask, water quality, NDVI, true colour | `COPERNICUS/S2_SR_HARMONIZED` | 10–20 m, ~5 days | Copernicus open licence |
 | Cloud Score+ for S2 | Cloud masking | `GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED` | 10 m, per scene | Google / open |
 | Sentinel-1 GRD | Cloud-proof water mask | `COPERNICUS/S1_GRD` | 10 m, ~6–12 days | Copernicus open licence |
-| Copernicus DEM GLO-30 | AOI, max extent, AEV curve (primary), slope mask | `COPERNICUS/DEM/GLO30_2024_1` (2024_1 release; the older `COPERNICUS/DEM/GLO30` is deprecated in EE) | 30 m; tiles over Thwake acquired 2010-12-15 to 2014-05-24 (EE tile metadata, checked 2026-10-09) | Copernicus DEM licence (free, attribution) |
-| SRTM | AEV curve cross-check | `USGS/SRTMGL1_003` | 30 m; acquired 2000 | Public domain |
+| Copernicus DEM GLO-30 | AOI, max extent, AEV curve (primary), slope mask | `COPERNICUS/DEM/GLO30_2024_1` (2024_1 release; the older `COPERNICUS/DEM/GLO30` is deprecated in EE) | 30 m; tiles over Thwake acquired 2010-12-15 to 2014-05-24 (EE tile metadata, checked 2026-10-09); heights relative to EGM2008 | Copernicus DEM licence (free, attribution) |
+| SRTM | AEV curve cross-check | `USGS/SRTMGL1_003` | 30 m; acquired 2000-02-11 to 2000-02-22 (EE `date_range` property); heights relative to EGM96, whole metres | Public domain |
 | JRC Global Surface Water | Historic river channel / prior water | `JRC/GSW1_4/GlobalSurfaceWater` | 30 m, 1984–2021 | Copernicus / JRC open |
 | ESA WorldCover | Baseline land cover | `ESA/WorldCover/v200` | 10 m, 2021 | CC BY 4.0 |
 | Dynamic World | Near-real-time land cover | `GOOGLE/DYNAMICWORLD/V1` | 10 m, per S2 scene | CC BY 4.0 |

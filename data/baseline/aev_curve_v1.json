@@ -1,0 +1,172 @@
+{
+ "name": "Thwake reservoir area–elevation–volume curve v1",
+ "status": "DRAFT — not frozen. The baseline freeze is prompt 05 (AGENTS.md rule 8).",
+ "csv": "data/baseline/aev_curve_v1.csv",
+ "columns": {
+  "level_m_asl": "water level, m above sea level (each DEM's own vertical datum)",
+  "area_km2": "water area at or below the level inside the max-extent mask, km²",
+  "volume_mcm": "stored volume below the level, million m³",
+  "dem_source": "DEM short name (key of 'dems' below)"
+ },
+ "full_supply_level_m_asl": 912.0,
+ "fsl_is_fallback": false,
+ "fsl_note": "Design value from official documents (data/external/official_figures.csv); awaiting human verification (human-steps.md H6).",
+ "fsl_sources": [
+  "https://www.irrigation.go.ke/sites/default/files/downloads/ENVIRONMENT%20SOCIAL%20IMPACT%20ASSESSMENT%20(ESIA)%20-%20THWAKE%20MULTIPURPOSE%20WATER%20DEVELOPMENT%20PROGRAM%20(Final).pdf",
+  "https://water.go.ke/sites/default/files/2025-01/TERMS%20OF%20REFERENCE%20FOR%20CONSULTING%20SERVICES%20FOR%20ATHI%20RIVER%20BASIN%20MODELLING.pdf"
+ ],
+ "level_step_m": 0.5,
+ "max_extent": {
+  "path": "data/baseline/max_extent.geojson",
+  "area_km2": 30.36,
+  "official_area_km2": 29.0,
+  "dem": "COPERNICUS/DEM/GLO30_2024_1",
+  "method_version": "extent-v1",
+  "note": "The same GLO-30 mask is used for every DEM, so curve differences reflect valley shape only. Pixels are in the mask if their centre is inside it."
+ },
+ "design_capacity_sources": [
+  {
+   "value": "688",
+   "source_url": "https://www.irrigation.go.ke/sites/default/files/downloads/ENVIRONMENT%20SOCIAL%20IMPACT%20ASSESSMENT%20(ESIA)%20-%20THWAKE%20MULTIPURPOSE%20WATER%20DEVELOPMENT%20PROGRAM%20(Final).pdf",
+   "source_date": "2025-05",
+   "confidence": "high",
+   "notes": "Current design (80.5 m dam). Same figure in Ministry ToRs 2020 and Oct 2024."
+  },
+  {
+   "value": "688",
+   "source_url": "https://water.go.ke/sites/default/files/2025-01/TOR-CONSULTANCY%20SERVICES%20TO%20UNDERTAKE%20STAKEHOLDER%20AWARENESS%20AND%20COMMUNITY%20SENSITIZATION%20COMMUNICATION%20CAMPAIGNS%20ON%20DAM%20BREAK%20AND%20EMERGENCY%20PREPAREDNESS%20.pdf",
+   "source_date": "2024-10",
+   "confidence": "high",
+   "notes": "'80.5m high multi-purpose dam with storage capacity of 688 million cubic meter'."
+  },
+  {
+   "value": "681",
+   "source_url": "https://water.go.ke/sites/default/files/2025-01/TERMS%20OF%20REFERENCE%20FOR%20CONSULTING%20SERVICES%20FOR%20ATHI%20RIVER%20BASIN%20MODELLING.pdf",
+   "source_date": "2019-01",
+   "confidence": "medium",
+   "notes": "SUPERSEDED: CAS 2014 design (77 m dam), 'Storage Capacity (NWL)'. Source of the 681 figure seen in older reports."
+  },
+  {
+   "value": "825",
+   "source_url": "https://www.irrigation.go.ke/sites/default/files/downloads/ENVIRONMENT%20SOCIAL%20IMPACT%20ASSESSMENT%20(ESIA)%20-%20THWAKE%20MULTIPURPOSE%20WATER%20DEVELOPMENT%20PROGRAM%20(Final).pdf",
+   "source_date": "2025-05",
+   "confidence": "medium",
+   "notes": "SUPERSEDED: Samez 2009 preliminary design (84 m dam, FSL 912), as summarised in ESIA §2.2."
+  }
+ ],
+ "dems": {
+  "copernicus_glo30": {
+   "label": "Copernicus GLO-30",
+   "collection": "COPERNICUS/DEM/GLO30_2024_1",
+   "acquired": "2010-12-15/2014-05-24",
+   "vertical_datum": "EGM2008",
+   "grid_transform": "PARAM_MT[\"Affine\", \n  PARAMETER[\"num_row\", 3], \n  PARAMETER[\"num_col\", 3], \n  PARAMETER[\"elt_0_0\", 0.0002777777777777778], \n  PARAMETER[\"elt_0_2\", 36.99986111111111], \n  PARAMETER[\"elt_1_1\", -0.0002777777777777778], \n  PARAMETER[\"elt_1_2\", -0.9998611111111111]]",
+   "mask_area_on_grid_km2": 30.359,
+   "mask_area_above_fsl_km2": 0.0,
+   "min_elevation_in_mask_m": 836.5,
+   "max_elevation_in_mask_m": 912,
+   "curve_start_m_asl": 836.0,
+   "area_at_fsl_km2": 30.36,
+   "volume_at_fsl_mcm": 743.4,
+   "dvolume_dlevel_at_fsl_mcm_per_m": 30.1,
+   "capacity_check": {
+    "volume_at_fsl_mcm": 743.4,
+    "design_capacity_mcm": 688.0,
+    "vs_design_pct": 8.1,
+    "design_history_mcm": [
+     681.0,
+     825.0
+    ],
+    "vs_history_low_pct": 9.2,
+    "vs_history_high_pct": -9.9,
+    "within_design_history": true,
+    "needs_investigation": false
+   },
+   "rim": {
+    "searched_m_asl": [
+     907.0,
+     917.0
+    ],
+    "barrier": "dam wall only",
+    "first_overflow_m_asl": 913.0,
+    "leaks_at_fsl": false,
+    "rim_margin_above_fsl_m": 1.0,
+    "overflow_passes": [
+     {
+      "lat": -1.79667,
+      "lon": 37.82917
+     }
+    ],
+    "own_fill_at_fsl_km2": 30.36,
+    "own_fill_outside_mask_km2": 0.0,
+    "mask_outside_own_fill_km2": 0.0
+   }
+  },
+  "srtm": {
+   "label": "SRTM",
+   "collection": "USGS/SRTMGL1_003",
+   "acquired": "2000-02-11/2000-02-22",
+   "vertical_datum": "EGM96",
+   "grid_transform": "PARAM_MT[\"Affine\", \n  PARAMETER[\"num_row\", 3], \n  PARAMETER[\"num_col\", 3], \n  PARAMETER[\"elt_0_0\", 0.0002777777777777778], \n  PARAMETER[\"elt_0_2\", -180.0001388888889], \n  PARAMETER[\"elt_1_1\", -0.0002777777777777778], \n  PARAMETER[\"elt_1_2\", 60.00013888888889]]",
+   "mask_area_on_grid_km2": 30.359,
+   "mask_area_above_fsl_km2": 0.314,
+   "min_elevation_in_mask_m": 828,
+   "max_elevation_in_mask_m": 927,
+   "curve_start_m_asl": 827.5,
+   "area_at_fsl_km2": 30.04,
+   "volume_at_fsl_mcm": 795.8,
+   "dvolume_dlevel_at_fsl_mcm_per_m": 29.9,
+   "capacity_check": {
+    "volume_at_fsl_mcm": 795.8,
+    "design_capacity_mcm": 688.0,
+    "vs_design_pct": 15.7,
+    "design_history_mcm": [
+     681.0,
+     825.0
+    ],
+    "vs_history_low_pct": 16.9,
+    "vs_history_high_pct": -3.5,
+    "within_design_history": true,
+    "needs_investigation": false
+   },
+   "rim": {
+    "searched_m_asl": [
+     907.0,
+     917.0
+    ],
+    "barrier": "dam wall only",
+    "first_overflow_m_asl": 910.0,
+    "leaks_at_fsl": true,
+    "rim_margin_above_fsl_m": -2.0,
+    "overflow_passes": [
+     {
+      "lat": -1.79667,
+      "lon": 37.82889
+     }
+    ]
+   }
+  }
+ },
+ "dem_comparison": {
+  "difference": "srtm minus copernicus_glo30 (m), inside the mask",
+  "whole_mask": {
+   "pixels": 31979,
+   "mean_m": -1.7,
+   "std_m": 2.95,
+   "p5_m": -5.87,
+   "median_m": -1.88,
+   "p95_m": 3.38
+  },
+  "within_500m_of_wall": {
+   "pixels": 988,
+   "mean_m": -1.81,
+   "std_m": 3.13,
+   "p5_m": -6.47,
+   "median_m": -2.19,
+   "p95_m": 3.83
+  }
+ },
+ "method": "docs/methodology.md §1.3",
+ "method_version": "aev-v1",
+ "generated": "2026-10-09"
+}

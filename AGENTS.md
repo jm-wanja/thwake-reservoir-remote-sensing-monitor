@@ -14,8 +14,8 @@ An independent, long-running **satellite record of Thwake Dam reservoir** (Makue
 
 ## 3. Current status
 
-- Phase: **1 — Baseline, in progress.** AOI and max-extent mask done (prompt 03): `python -m thwake baseline --step extent` → `data/baseline/{aoi,max_extent}.geojson`.
-- Next: AEV curve (`/04-phase1-aev-curve`), then baseline freeze (`/05`), then **Phase 1.5 — Validation** (`/05a`–`/05c`, [ADR 0009](docs/decisions/0009-validation-phase.md)) before Phase 2 — see [docs/roadmap.md](docs/roadmap.md).
+- Phase: **1 — Baseline, in progress.** AOI and max-extent mask done (prompt 03): `python -m thwake baseline --step extent` → `data/baseline/{aoi,max_extent}.geojson`. AEV curve drafted, not frozen (prompt 04): `python -m thwake baseline --step aev` → `data/baseline/aev_curve_v1.{csv,json}`, `media/aev_curve_v1.png`.
+- Next: baseline freeze (`/05-phase1-baseline-freeze`), then **Phase 1.5 — Validation** (`/05a`–`/05c`, [ADR 0009](docs/decisions/0009-validation-phase.md)) before Phase 2 — see [docs/roadmap.md](docs/roadmap.md).
 - Engineering quality backlog (tests, CI, provenance, validation, ML comparison): [docs/engineering-roadmap.md](docs/engineering-roadmap.md).
 - Do not start a later phase's work before the earlier phase's exit criteria are met unless an ADR says otherwise.
 

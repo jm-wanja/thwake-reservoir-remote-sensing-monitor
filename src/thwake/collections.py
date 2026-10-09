@@ -1,7 +1,7 @@
 """Fetch and filter S1, S2, CHIRPS and ERA5 for the AOI and date range.
 
-Also applies Sentinel-2 cloud masking. So far only the baseline DEM is implemented; the
-scene collections follow in prompt 06. See docs/architecture.md §3B and
+Also applies Sentinel-2 cloud masking. So far only the baseline DEMs (Copernicus GLO-30,
+SRTM) are implemented; the scene collections follow in prompt 06. See docs/architecture.md §3B and
 docs/methodology.md §2.1–2.2.
 """
 
@@ -12,6 +12,12 @@ import ee
 from thwake.config import Config
 
 DEM_BAND = "DEM"
+SRTM_BAND = "elevation"
+# Short DEM names (used as ``dem_source`` in the AEV curve) → keys in ee_collections.yaml.
+DEM_COLLECTION_KEYS = {"copernicus_glo30": "copernicus_dem_glo30", "srtm": "srtm"}
+DEM_LABELS = {"copernicus_glo30": "Copernicus GLO-30", "srtm": "SRTM"}
+# Vertical reference of each DEM's heights, from the dataset documentation.
+DEM_VERTICAL_DATUM = {"copernicus_glo30": "EGM2008", "srtm": "EGM96"}
 
 
 def copernicus_dem(cfg: Config, region: ee.Geometry) -> tuple[ee.Image, ee.ImageCollection]:
@@ -36,3 +42,38 @@ def copernicus_dem(cfg: Config, region: ee.Geometry) -> tuple[ee.Image, ee.Image
     projection = tiles.first().projection()
     dem = tiles.mosaic().setDefaultProjection(projection).reproject(projection)
     return dem, tiles
+
+
+def srtm_dem(cfg: Config) -> tuple[ee.Image, ee.ImageCollection]:
+    """SRTM 1 arc-second elevation (m), band renamed ``DEM``, in its native projection.
+
+    SRTM is a single global image (acquired Feb 2000). Its dates are stored in a
+    ``date_range`` property rather than ``system:time_start/end``; they are copied there and
+    the image is wrapped in a one-image collection, so callers read acquisition dates the
+    same way as for GLO-30.
+
+    Args:
+        cfg: Loaded configuration (image ID from ``ee_collections.yaml``).
+
+    Returns:
+        The single-band ``DEM`` image and a one-image collection holding it.
+    """
+    image = ee.Image(cfg.ee_collections["srtm"])
+    dates = ee.List(image.get("date_range"))
+    image = image.set({"system:time_start": dates.get(0), "system:time_end": dates.get(1)})
+    projection = image.select(SRTM_BAND).projection()
+    dem = image.select([SRTM_BAND], [DEM_BAND]).reproject(projection)
+    return dem, ee.ImageCollection([image])
+
+
+def dem_by_name(cfg: Config, name: str, region: ee.Geometry) -> tuple[ee.Image, ee.ImageCollection]:
+    """Pre-dam DEM by short name (a key of :data:`DEM_COLLECTION_KEYS`).
+
+    Raises:
+        KeyError: If the name is unknown.
+    """
+    if name == "copernicus_glo30":
+        return copernicus_dem(cfg, region)
+    if name == "srtm":
+        return srtm_dem(cfg)
+    raise KeyError(f"Unknown DEM {name!r}; expected one of {sorted(DEM_COLLECTION_KEYS)}")
