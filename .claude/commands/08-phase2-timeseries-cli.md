@@ -7,6 +7,11 @@ description: "Phase 2: Canonical time series and `update` CLI"
 Prerequisites (human must have done these): prompt 07 done.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Build the canonical time series and an idempotent update command.
 
 Read first: ARCHITECTURE §4 (data flow) and §6 (schema), AGENTS.md conventions.

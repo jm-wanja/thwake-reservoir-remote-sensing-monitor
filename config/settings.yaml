@@ -80,3 +80,11 @@ earth_engine:
   assets_folder: projects/thwake-monitor/assets/thwake
   # Sentinel-2 "before" composite (prompt 05), versioned with the baseline.
   before_composite_asset: projects/thwake-monitor/assets/thwake/before_composite_s2_v1
+  # Compute budget (AGENTS.md rule 11). Community tier = 540,000 EECU-seconds/month
+  # (150 EECU-hours), no billing account; exceeding it puts the project in restricted mode
+  # (no charges, work pauses until the monthly reset). Usage alert at 80% set up 2026-10-10.
+  # Reference cost: one full Masinga validation run (Dec 2018-Sep 2026) ~42 EECU-hours.
+  budget:
+    monthly_limit_eecu_hours: 150
+    alert_threshold_pct: 80
+    task_soft_cap_eecu_hours: 10   # ask the human before any single task exceeds this

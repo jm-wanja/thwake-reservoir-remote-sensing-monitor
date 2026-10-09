@@ -74,18 +74,20 @@ Modules (one responsibility each):
 | `reference` | Phase 1: pre-filling reference layers: land cover in the max extent, Sentinel-2 "before" composite (asset + PNG), JRC river channel. |
 | `ee_auth` | Authenticate (user creds locally, service account in CI). |
 | `collections` | Fetch & filter S1, S2, CHIRPS, ERA5 for AOI/date range; S2 cloud masking (Cloud Score+). |
-| `water_s2` | MNDWI/NDWI → Otsu threshold → water mask. |
-| `water_s1` | Speckle filter → VV backscatter → Otsu / dB threshold → water mask. |
+| `water_s2` | MNDWI/NDWI → Otsu threshold → water mask; daily Sentinel-2 mosaics (implemented in prompt 05a). |
+| `water_s1` | Speckle filter → VV backscatter → Otsu / dB threshold → water mask; daily Sentinel-1 mosaics (prompt 05a). |
+| `otsu` | Otsu threshold from a fixed-bin histogram, with plausible-range fallback (shared by `water_s1`/`water_s2`). |
 | `postprocess` | Clip to max-extent, keep component connected to dam, remove specks, gap-fill cloud-obscured edges (optional, see methodology). |
-| `area` | Pixel area sum → km², with edge-pixel sensitivity range. |
+| `area` | Pixel area sum → km², with a range for obscured pixels and edge pixels (prompt 05a; threshold sensitivity in prompt 07). |
 | `volume` | AEV curve: build from per-bin sums, read/write CSV; area → level & volume interpolation; (Phase 2) uncertainty propagation. |
 | `quality` | (Phase 3) turbidity & chlorophyll-proxy indices over water pixels; stats per zone (inflow arm vs dam). |
 | `climate` | Catchment rainfall (CHIRPS), evaporation (ERA5-Land) aggregates. |
 | `regional` | (Phase 4) land-cover change, downstream NDVI dry-season irrigation signal. |
 | `export` | Write CSV/GeoJSON/media (AEV figure so far); append to canonical time series idempotently. |
 | `qa` | Sanity checks: S1 vs S2 agreement, impossible jumps, area > max-extent, etc. |
+| `validation` | Phase 1.5: reference-reservoir check (mask, DEM curves, scene areas in Earth Engine; area → level vs published levels, metrics, figure offline). See [validation.md](validation.md). |
 
-Entry points (CLI, e.g. `python -m thwake <command>`): `baseline`, `update --since <date>`, `media`, `qa`.
+Entry points (CLI, e.g. `python -m thwake <command>`): `baseline`, `validate reference --name <reservoir> [--compare-only]`, `update --since <date>`, `media`, `qa`.
 
 ### C. Earth Engine App (JavaScript, `app/ee-app/`)
 - Live explorer hosted by Google. Reads collections directly + baseline assets.
@@ -149,7 +151,7 @@ thwake-reservoir-remote-sensing-monitor/
 ├── data/
 │   ├── baseline/             # frozen AOI, max-extent, AEV curve (versioned)
 │   ├── processed/            # thwake_timeseries.csv, outlines/*.geojson, run metadata
-│   ├── validation/           # labelled shorelines + metrics (Phase 1.5)
+│   ├── validation/           # Phase 1.5: reference-reservoir outputs, labelled shorelines, metrics
 │   └── external/             # small reference files (official figures w/ source)
 ├── media/                    # time-lapse GIF/MP4, static figures for site/README
 ├── notebooks/                # exploration only (outputs stripped by nbstripout)

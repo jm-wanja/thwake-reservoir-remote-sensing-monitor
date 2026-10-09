@@ -7,6 +7,11 @@ description: "Phase 3: Water-quality indicators"
 Prerequisites (human must have done these): Phase 2 done and a substantial water surface present.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Add water-quality indicators (methodology §3).
 
 Read first: docs/methodology.md §3, AGENTS.md rule 7,

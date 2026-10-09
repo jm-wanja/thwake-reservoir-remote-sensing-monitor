@@ -7,6 +7,11 @@ description: "Phase 2: Water detection (Sentinel-2 and Sentinel-1)"
 Prerequisites (human must have done these): baseline-v1 frozen and Phase 1.5 (05a–05c) done.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Extend the water-detection code built in Phase 1.5 (05a) into the full per-scene pipeline for
 Sentinel-2 and Sentinel-1 — extend, do not rewrite; `thwake evaluate` must still pass
 (methodology §2.1–2.3, ADR 0005).

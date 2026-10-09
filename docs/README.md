@@ -4,6 +4,7 @@ Everything about **what** this project is, **why** it exists, **how** it is buil
 
 | # | Document | What it answers |
 |---|----------|-----------------|
+| 0 | [overview.html](overview.html) | **Plain-language overview** with diagrams: why, how it works, baseline, validation, system design, roadmap, limits ([PNG](../media/overview.png)) |
 | 1 | [project-brief.md](project-brief.md) | What, why, who it's for, goals, non-goals, success criteria |
 | 2 | [background-thwake.md](background-thwake.md) | Sourced facts about Thwake Dam |
 | 3 | [architecture.md](architecture.md) | System design: components, data flow, repository layout, data contracts, deployment |
@@ -19,6 +20,7 @@ Everything about **what** this project is, **why** it exists, **how** it is buil
 | 13 | [agent-workflow.md](agent-workflow.md) | How the project is built with AI agents: slash commands, order, review |
 | 14 | [human-steps.md](human-steps.md) | Steps only the author does: accounts, secrets, commits, publishing, approvals |
 | 15 | [baseline-v1.md](baseline-v1.md) | The Phase 1 baseline: inputs, dataset versions, results vs official figures, known issues, freeze status |
+| 16 | [validation.md](validation.md) | Phase 1.5: how accurate the method is: reference reservoir (Masinga) vs published levels; later the labelled test set |
 
 ## Maintenance rules
 

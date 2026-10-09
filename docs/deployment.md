@@ -39,5 +39,5 @@ See [ADR 0003](decisions/0003-free-deployment-ee-app-and-github-pages.md) (Strea
 ## Free-tier limits to keep in mind
 - GitHub Pages: site ≤ 1 GB, soft bandwidth ~100 GB/month — keep media compressed.
 - GitHub repo: files > 50 MB warn, > 100 MB blocked — never commit rasters.
-- Earth Engine non-commercial: quotas on concurrent requests; app may be slow under heavy traffic — acceptable.
+- Earth Engine non-commercial, **Community tier: 150 EECU-hours per month** (540,000 EECU-seconds), no billing account. Check usage at Cloud console → IAM & Admin → Quotas (filter `earthengine.googleapis.com`, "Noncommercial EECU-seconds per month"). Email alert at 80% configured 2026-10-10. Exceeding the limit → restricted mode (no charges; work pauses until the monthly reset). Development runs are the expensive part (one full Masinga validation ≈ 42 EECU-hours; 2026-10-10 used ~72 EECU-hours, 48%); routine Thwake updates (small AOI, new scenes only) should be far cheaper. Also: quotas on concurrent requests; the app may be slow under heavy traffic — acceptable.
 - Actions: generous for public repos; keep jobs short (aggregate in EE, export small tables).

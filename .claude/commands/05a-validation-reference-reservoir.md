@@ -7,6 +7,11 @@ description: "Phase 1.5: validate the method on a reference reservoir with publi
 Prerequisites (human must have done these): baseline-v1 frozen (prompt 05) and committed.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Show the planned method is accurate on a reservoir that already exists, before trusting it on Thwake.
 
 Read first: docs/decisions/0009-validation-phase.md, docs/methodology.md §1–2, docs/engineering-roadmap.md A1,

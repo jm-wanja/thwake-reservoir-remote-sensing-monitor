@@ -20,11 +20,12 @@ def cfg() -> Config:
 
 
 def test_frozen_files_cover_every_baseline_output(cfg: Config) -> None:
+    # Only data/baseline/ is baseline-only. media/ also holds later outputs; its frozen files
+    # (the baseline figures) are protected by the checksum manifest below.
     names = {p.relative_to(REPO_ROOT).as_posix() for p in b.frozen_files(cfg)}
     on_disk = {
         p.relative_to(REPO_ROOT).as_posix()
-        for folder in ("data/baseline", "media")
-        for p in (REPO_ROOT / folder).iterdir()
+        for p in (REPO_ROOT / "data" / "baseline").iterdir()
         if p.is_file() and p.name != ".gitkeep" and p != b.manifest_path(cfg)
     }
     assert on_disk <= names, f"baseline outputs not in FROZEN_PATH_KEYS: {on_disk - names}"

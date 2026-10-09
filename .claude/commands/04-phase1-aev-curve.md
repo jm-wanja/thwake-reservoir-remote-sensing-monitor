@@ -7,6 +7,11 @@ description: "Phase 1: Area–Elevation–Volume curve"
 Prerequisites (human must have done these): prompt 03 done.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Build the AEV curve (methodology §1.3, ADR 0006).
 
 Read first: docs/methodology.md §1.1–1.3 and §2.5, ADR 0006, ADR 0008 (max-extent method),

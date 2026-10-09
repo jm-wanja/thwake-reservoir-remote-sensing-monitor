@@ -7,6 +7,11 @@ description: "Phase 1: AOI and max-extent mask"
 Prerequisites (human must have done these): H2 (Earth Engine authenticated, EE_PROJECT in .env), prompt 01 done (dam location, FSL or documented fallback).
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Implement the AOI and max-extent mask (methodology §1.1–1.2).
 
 Read first: docs/methodology.md §1, docs/architecture.md §3A, ADR 0006,

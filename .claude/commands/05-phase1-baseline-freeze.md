@@ -7,6 +7,11 @@ description: "Phase 1: Baseline reference layers and freeze"
 Prerequisites (human must have done these): prompt 04 done; human reviews results before freeze.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Produce pre-filling reference layers, write up the baseline, and prepare the freeze
 (methodology §1.4).
 

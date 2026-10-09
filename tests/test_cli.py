@@ -6,7 +6,7 @@ from thwake import ee_auth
 from thwake import reference as reference_steps
 from thwake.cli import cli
 
-COMMANDS = ["baseline", "update", "media", "qa"]
+COMMANDS = ["baseline", "validate", "update", "media", "qa"]
 NOT_IMPLEMENTED = ["update", "media", "qa"]
 
 
@@ -158,3 +158,48 @@ def test_verify(monkeypatch: pytest.MonkeyPatch, problems: list[str], code: int)
     result = CliRunner().invoke(cli, ["baseline", "--verify"])
     assert result.exit_code == code
     assert ("match" in result.output) if code == 0 else ("changed" in result.output)
+
+
+def fake_validation(monkeypatch: pytest.MonkeyPatch) -> list[str]:
+    from thwake import validation as validation_steps
+
+    calls: list[str] = []
+    monkeypatch.setattr(ee_auth, "initialize", lambda cfg: calls.append("init"))
+    monkeypatch.setattr(
+        validation_steps, "build_reference", lambda cfg, name, log: calls.append(f"build {name}")
+    )
+    monkeypatch.setattr(
+        validation_steps,
+        "compare_reference",
+        lambda cfg, name, log: calls.append(f"compare {name}") or "result",
+    )
+    monkeypatch.setattr(validation_steps, "comparison_summary", lambda result: f"summary {result}")
+    return calls
+
+
+def test_validate_reference_runs_earth_engine_then_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = fake_validation(monkeypatch)
+    result = CliRunner().invoke(cli, ["validate", "reference", "--name", "masinga"])
+    assert result.exit_code == 0, result.output
+    assert calls == ["init", "build masinga", "compare masinga"]
+    assert "summary result" in result.output
+
+
+def test_validate_reference_compare_only_skips_earth_engine(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = fake_validation(monkeypatch)
+    result = CliRunner().invoke(
+        cli, ["validate", "reference", "--name", "masinga", "--compare-only"]
+    )
+    assert result.exit_code == 0, result.output
+    assert calls == ["compare masinga"]
+
+
+def test_validate_reference_rejects_unknown_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = fake_validation(monkeypatch)
+    result = CliRunner().invoke(cli, ["validate", "reference", "--name", "nowhere"])
+    assert result.exit_code == 1
+    assert "Unknown reference reservoir" in result.output and calls == []

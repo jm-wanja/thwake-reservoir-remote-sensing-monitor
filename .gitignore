@@ -8,10 +8,15 @@ credentials/
 # definitely not a credential.
 *.json
 !.claude/settings.json
-# Baseline metadata written by `thwake baseline` (no secrets).
+# Metadata written by `thwake baseline` and `thwake validate` (no secrets).
 !data/baseline/aev_curve_v1.json
 !data/baseline/landcover_flood_zone.json
 !data/baseline/before_composite.json
+!data/validation/reference_masinga_scenes.json
+!data/validation/reference_masinga_metrics.json
+# Raw third-party downloads whose terms of reuse are unconfirmed (DAHITI); only
+# derived comparisons are committed.
+data/external/dahiti/
 
 # --- Large rasters: never commit (AGENTS.md §5.3) ---
 *.tif

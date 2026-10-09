@@ -26,6 +26,8 @@ Thwake Dam is planned to be one of Kenya's largest reservoirs (688 million m³ a
 
 ## Project documentation
 
+**Start here:** [plain-language overview](docs/overview.html) — why, how it works, diagrams and results so far ([screenshot](media/overview.png)).
+
 | Read this | For |
 |-----------|-----|
 | [Project brief](docs/project-brief.md) | Why it exists, who it's for, goals, non-goals, success criteria |

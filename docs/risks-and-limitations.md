@@ -12,6 +12,7 @@
 | Wind / vegetation in water (S1) | Missed or false water | Otsu per scene; S1–S2 cross-check; QA flags |
 | Water quality is a colour-based proxy | Not concentrations; can't prove pollution | Careful wording; zone/relative comparisons; seek in-situ data |
 | No official operational data | Can't validate against true storage | Use official announcements when available; Global Water Watch |
+| Sedimentation (long term) | The frozen pre-dam AEV curve slowly **overestimates** true storage as sediment fills the bed. Masinga (Tana) lost ~215 MCM (~13.6%) of its 1,560 MCM design capacity by 2011 ([Bunyasi et al., 2013](https://ir-library.ku.ac.ke/handle/123456789/9784)); ~6% in its first 7 years ([Maingi, 2012](https://erepository.uonbi.ac.ke/items/bbdb43b8-38d8-4bd3-b07a-86fb9742adf2)) | Small over the project's first years; stated in public limitations. Long term: compare measured area-at-level against the frozen curve to detect bed change (engineering roadmap E5); new baseline version if a bathymetric survey is published |
 
 ## Project risks
 

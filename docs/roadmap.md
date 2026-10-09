@@ -21,7 +21,7 @@ Ongoing project. Phases are sequential in priority but Phase 1 is the most time-
 - **Exit:** baseline files committed + method written up
 
 ## Phase 1.5 — Validation (before Phase 2) — [ADR 0009](decisions/0009-validation-phase.md)
-- [ ] Reference reservoir: method run on an existing reservoir with published figures (`/05a-validation-reference-reservoir`)
+- [x] Reference reservoir: method run on an existing reservoir with published figures (`/05a-validation-reference-reservoir`, 2026-10-10): Masinga, area → level vs KenGen levels. Sentinel-1 + GLO-30: bias −0.33 m, RMSE 0.46 m (n = 4); SRTM offset −2.25 m but changes agree to 0.19 m. Against DAHITI altimetry (independent satellite product, 2019–2026): Sentinel-1 + GLO-30 bias −0.38 m, RMSE 0.56 m (n = 32). Volume not testable (no pre-dam DEM). Sentinel-1 false water over exposed bed at low levels found (+25.8 km² vs Sentinel-2 at Masinga's lows). Write-up: [validation.md](validation.md). Awaiting human review
 - [ ] Labelled test set: ~20–30 human-digitised shorelines; IoU / precision / recall per sensor (`/05b-validation-labelled-set`, labelling is a human step)
 - [ ] Evaluation harness: `thwake evaluate` + CI gate on thresholds (`/05c-validation-evaluation-harness`)
 - [ ] Accuracy table in README and methodology

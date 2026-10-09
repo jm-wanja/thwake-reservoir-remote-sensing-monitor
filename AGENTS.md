@@ -15,7 +15,7 @@ An independent, long-running **satellite record of Thwake Dam reservoir** (Makue
 ## 3. Current status
 
 - Phase: **1 — Baseline, complete. Baseline v1 FROZEN on 2026-10-10** (approved by the author): AOI and max extent, AEV curve (GLO-30 + SRTM), land cover, river channel, "before" composite (+ EE asset `before_composite_s2_v1`). Built by `python -m thwake baseline`. Write-up and freeze record: [docs/baseline-v1.md](docs/baseline-v1.md). Checksums: `data/baseline/baseline_v1.sha256`, enforced in CI by `tests/test_freeze.py`; `thwake baseline` refuses to overwrite frozen files without `--force`. **Do not change any frozen file:** changes need an ADR and a `v2` (rule 8). Tag `baseline-v1` is created by the author on `main` after the PR is merged.
-- Next: **Phase 1.5 — Validation** (`/05a`–`/05c`, [ADR 0009](docs/decisions/0009-validation-phase.md)) before Phase 2 — see [docs/roadmap.md](docs/roadmap.md).
+- Now: **Phase 1.5 — Validation** (`/05a`–`/05c`, [ADR 0009](docs/decisions/0009-validation-phase.md)) before Phase 2 — see [docs/roadmap.md](docs/roadmap.md). `/05a` (reference reservoir, Masinga) done 2026-10-10, awaiting review: [docs/validation.md](docs/validation.md). Next: `/05b`.
 - Engineering quality backlog (tests, CI, provenance, validation, ML comparison): [docs/engineering-roadmap.md](docs/engineering-roadmap.md).
 - Do not start a later phase's work before the earlier phase's exit criteria are met unless an ADR says otherwise.
 
@@ -49,6 +49,8 @@ Do not introduce new frameworks, paid services, or servers without a new ADR.
 8. **Baseline before results:** the area–elevation–volume curve (Phase 1) is frozen and versioned before filling data is analysed, so it cannot be tuned to fit results. Changes to it require an ADR.
 9. **Respect people:** no imagery or data identifying individual households; resettlement/land topics stay at area level.
 10. **No git writes, accounts, credentials or publishing.** Agents never `git commit`, `push`, `tag`, create repos/accounts, handle keys/secrets, publish the Earth Engine App, or approve their own work (baseline freeze, ADR acceptance, public wording). Prepare the change, then stop and tell the human what to run. See [human-steps.md](docs/human-steps.md). The only automated commits are by the scheduled `update.yml` workflow the human set up. **Enforced** for Claude Code sessions by `.claude/settings.json` (deny rules) and `.claude/hooks/block-repo-writes.sh` (blocks any git/gh command not on a read-only allowlist) — do not edit or work around these files.
+
+11. **Earth Engine budget.** The `thwake-monitor` project is on the free Community tier: **150 EECU-hours per month** (`config/settings.yaml` → `earth_engine.budget`). One full Masinga validation run cost ~42 EECU-hours. Before any Earth Engine run: estimate its cost (scenes × area × steps, or a small measured sample); if a task would exceed **10 EECU-hours**, stop and ask the human first. Prefer offline re-analysis (`--compare-only`, cached outputs), checkpoints/resume, small test windows before full runs, and server-side aggregation (never pull full rasters). Record the actual cost of every full run in the relevant doc. Never re-run a full job just to regenerate figures or text.
 
 ## 6. Conventions
 
