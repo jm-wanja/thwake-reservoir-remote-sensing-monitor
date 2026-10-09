@@ -1,0 +1,102 @@
+{
+ "reservoir": "masinga",
+ "name": "Masinga reservoir",
+ "method": "docs/validation.md",
+ "method_version": "reference-v1",
+ "generated": "2026-10-09",
+ "mask_level_m_asl": 1061.5,
+ "mask_area_km2": 135.43,
+ "dems": {
+  "copernicus_glo30": {
+   "label": "Copernicus GLO-30",
+   "collection": "COPERNICUS/DEM/GLO30_2024_1",
+   "vertical_datum": "EGM2008",
+   "acquired": "2010-12-15/2014-03-20",
+   "mask_area_km2": 135.43,
+   "min_elevation_m": 1010.4480590820312,
+   "water_surface_m": 1054.5,
+   "water_surface_area_km2": 100.29,
+   "water_surface_share_of_mask": 0.741
+  },
+  "srtm": {
+   "label": "SRTM",
+   "collection": "USGS/SRTMGL1_003",
+   "vertical_datum": "EGM96",
+   "acquired": "2000-02-11/2000-02-22",
+   "mask_area_km2": 135.43,
+   "min_elevation_m": 1007,
+   "water_surface_m": 1046.0,
+   "water_surface_area_km2": 70.71,
+   "water_surface_share_of_mask": 0.522
+  }
+ },
+ "scene_window": {
+  "start": "2018-12-01",
+  "end_exclusive": "2026-09-15"
+ },
+ "scenes": {
+  "S2": {
+   "scenes_found": 607,
+   "scenes_without_valid_pixels": 111,
+   "reused_from_checkpoint": true
+  },
+  "S1": {
+   "scenes_found": 362,
+   "scenes_without_valid_pixels": 0,
+   "reused_from_checkpoint": true
+  }
+ },
+ "cost": {
+  "eecu_seconds": 800,
+  "eecu_hours": 0.22,
+  "wall_time_min": 2.7,
+  "requests_profiled": 13,
+  "requests_unresolved": 0,
+  "note": "Sum of the Earth Engine profiles of every request of this run (interactive compute, not batch tasks). Scenes reused from a checkpoint (scenes.<sensor>.reused_from_checkpoint) were computed, and paid for, in an earlier run."
+ },
+ "analysis_grid": {
+  "crs": "EPSG:32737",
+  "scale_m": 10.0
+ },
+ "otsu_histogram_region": "mask + 1000 m ring",
+ "parameters": {
+  "sentinel2": {
+   "cloud_score_min": 0.6,
+   "fallback_threshold": 0.0,
+   "otsu_valid_range": [
+    -0.5,
+    0.5
+   ],
+   "histogram_range": [
+    -1.0,
+    1.0
+   ],
+   "histogram_bin_width": 0.01,
+   "histogram_scale_m": 20.0,
+   "min_valid_fraction": 0.7
+  },
+  "sentinel1": {
+   "instrument_mode": "IW",
+   "fixed_threshold_db": -18.0,
+   "speckle_filter": "focal_median",
+   "speckle_filter_radius_m": 50.0,
+   "otsu_valid_range": [
+    -25.0,
+    -12.0
+   ],
+   "histogram_range": [
+    -35.0,
+    5.0
+   ],
+   "histogram_bin_width": 0.1,
+   "histogram_scale_m": 20.0
+  },
+  "edge_ring_pixels": 0.5,
+  "min_valid_fraction": 0.7
+ },
+ "collections": {
+  "sentinel2_sr": "COPERNICUS/S2_SR_HARMONIZED",
+  "cloud_score_plus": "GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED",
+  "sentinel1_grd": "COPERNICUS/S1_GRD"
+ }
+}

@@ -59,7 +59,7 @@ Re-exporting overwrites it, so the asset is not frozen by checksum. Do not re-ex
 
 | Role | Collection / image | Data used |
 |------|--------------------|-----------|
-| Primary DEM (extent, AOI, AEV) | `COPERNICUS/DEM/GLO30_2024_1` | Tiles acquired 2010-12-15 to 2014-05-24 (before construction, 2018-03-27); heights EGM2008 |
+| Primary DEM (extent, AOI, AEV) | `COPERNICUS/DEM/GLO30_2024_1` | Tiles acquired 2010-12-15 to 2014-05-24 (before construction, 2018-03-27); heights EGM2008. **See [Erratum 1](#errata): the tile covering Thwake ends 2013-04-21.** |
 | Cross-check DEM (AEV) | `USGS/SRTMGL1_003` | Acquired 2000-02-11 to 2000-02-22; heights EGM96 |
 | Land cover | `ESA/WorldCover/v200` | Image `ESA/WorldCover/v200/2021` (year 2021) |
 | Land cover | `GOOGLE/DYNAMICWORLD/V1` | 18 images, 2026-06-01 to 2026-09-24, EPSG:32737 |
@@ -145,4 +145,10 @@ At 10%, the channel covers 0.353 km² in 50 pieces, 0.271 km² of it inside the 
 - [x] Earth Engine asset export completed; metadata matches `before_composite.json` (2026-10-10).
 - [x] Mask decision recorded as [ADR 0011](decisions/0011-shared-aev-mask-and-reported-rim-leaks.md), accepted by the author on 2026-10-10.
 - [x] Freeze manifest `data/baseline/baseline_v1.sha256` written; CI gate `tests/test_freeze.py`.
-- [ ] Author: merge the PR into `main` with a **merge commit** (not squash), then tag that commit on `main`: `git tag baseline-v1` and `git push origin baseline-v1` ([human-steps.md](human-steps.md) H3).
+- [x] Merged into `main` with a merge commit; tag `baseline-v1` on `e7c9921`, confirmed on GitHub by the author (2026-10-10).
+
+## Errata
+
+Corrections to this record that do not change any frozen file. The frozen files stay as they are (rule 8); a fix goes into `v2` only when a `v2` is needed for another reason.
+
+1. **GLO-30 acquisition dates (recorded 2026-10-10, prompt 05a; [open question 25](open-questions.md)).** The frozen `aoi.geojson`, `max_extent.geojson` (`dem_acquired`) and `aev_curve_v1.json` (`acquired`), and the dataset table above, give the GLO-30 acquisition window as **2010-12-15/2014-05-24**. That window includes the polar tiles (`S90_*`), which `filterBounds` also returns because their footprints span all longitudes. The tile covering Thwake, **S02 E037, was acquired 2010-12-15 to 2013-04-21** (as in `config/ee_collections.yaml`). **Heights, extent, AOI and AEV curve are unaffected:** the polar tiles have no pixels at Thwake, and both windows predate construction (2018-03-27). The validation code (`validation.dem_tiles_with_data`) already counts only tiles with data in the region; `collections.copernicus_dem` keeps its current behaviour until a `v2`.

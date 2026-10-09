@@ -45,15 +45,29 @@ sentinel2:
   threshold_method: otsu
   fallback_threshold: 0.0          # methodology §2.1 ("~0")
   min_valid_fraction: 0.7          # methodology §2.1 ("e.g. 0.7") → qa_flag low_coverage
-  cloud_score_plus_threshold: null # set in prompt 06
+  # Set in prompt 05a (validation), before any comparison was run; not tuned to Masinga.
+  cloud_score_plus_threshold: 0.6  # Cloud Score+ 'cs' ≥ this is clear; same value as the
+                                   # baseline composite (Google's suggested 0.5–0.65 range)
+  otsu_valid_range: [-0.5, 0.5]    # an Otsu MNDWI threshold outside this is implausible
+                                   # (water/land splits sit near 0) → use fallback_threshold
+  histogram_range: [-1.0, 1.0]     # MNDWI histogram for Otsu: full index range,
+  histogram_bin_width: 0.01        # 200 bins
+  histogram_scale_m: 20            # native B11 (SWIR1) resolution; the mask itself is 10 m
 
 sentinel1:
   instrument_mode: IW
   polarisation: VV
   threshold_method: otsu
   fixed_threshold_db: -18.0        # methodology §2.2 (GERD studies reference value)
-  speckle_filter: null             # focal median or refined Lee — choose in prompt 06
-  speckle_filter_radius_m: null
+  # Set in prompt 05a (validation), before any comparison was run; not tuned to Masinga.
+  speckle_filter: focal_median     # simplest filter in methodology §2.2; refined Lee may be
+                                   # compared in Phase 2 (prompt 06)
+  speckle_filter_radius_m: 50      # 5 pixels at 10 m; keeps ~100 m wide inlets
+  otsu_valid_range: [-25.0, -12.0] # an Otsu VV threshold outside this is implausible
+                                   # (calm water ≈ −20 dB and below, land ≈ −12 to −5 dB)
+  histogram_range: [-35.0, 5.0]    # VV histogram for Otsu (dB),
+  histogram_bin_width: 0.1         # 400 bins
+  histogram_scale_m: 20            # coarser than the 10 m mask; enough pixels for a histogram
   max_slope_deg: null              # radar-shadow / steep-slope mask — set in prompt 06
 
 postprocess:
@@ -66,3 +80,18 @@ uncertainty:
 qa:
   sensor_pair_window_days: 2       # methodology §2.6 (±2 days)
   sensor_disagree_pct: null        # methodology §2.6 ("X%") — set in prompt 07
+
+validation:
+  # Reference-reservoir validation (prompt 05a, docs/validation.md). Fixed before any
+  # comparison was run; never adjusted to improve agreement (ADR 0009).
+  otsu_buffer_m: 1000              # Otsu histogram region = max extent + this land ring,
+                                   # so the histogram has both classes even when full
+  match_window_days: 6             # a scene within this many days of a published date
+                                   # is compared with it (half the 12-day Sentinel-1A
+                                   # repeat); the gap is reported
+  rapid_change_m_per_day: 0.04     # flag matches where the level moves this fast: over
+                                   # the 6-day match window that is ≥ 0.24 m, about half a
+                                   # 0.5 m curve step (set 2026-10-10, before the DAHITI run)
+  dem_water_surface_min_share: 0.1 # a single DEM elevation covering ≥ this share of the
+                                   # mask is the water surface captured by the DEM (flat);
+                                   # no level below it can be estimated

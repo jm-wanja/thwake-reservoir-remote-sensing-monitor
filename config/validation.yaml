@@ -1,0 +1,74 @@
+# Phase 1.5 validation inputs (ADR 0009). Algorithm parameters are in thresholds.yaml
+# (sentinel1, sentinel2, validation); published figures are in
+# data/external/reference_reservoirs.csv, with sources.
+
+reference_reservoirs:
+  masinga:
+    name: Masinga reservoir
+    river: Tana River, Kenya
+    # KenGen (reference_reservoirs.csv). Used only for the area-at-FSL side check and to
+    # set the mask level; the DEM curves need no FSL.
+    full_supply_level_m_asl: 1056.5
+    # Level of the max-extent mask (water outside it is never counted) and top of the
+    # area–elevation curves: FSL + 5 m, the same margin as the Thwake AOI
+    # (thresholds baseline.aoi_buffer_above_fsl_m). Covers the record 1,058.22 m (May 2024).
+    mask_level_m_asl: 1061.5
+    # Closure line burned into the DEM as a barrier (as the Thwake wall, methodology §1.2),
+    # DIGITISED 2026-10-10 (prompt 05a) on a Sentinel-2 L2A median, Jun–Sep 2025, read to
+    # about ±20 m; not a published value (⚠️ verify). West to east: a road embankment along
+    # the north shore (GLO-30 overflows it at ≈1,055.2 m, below FSL: its 30 m pixels miss
+    # the narrow crest), the spillway, then the main embankment (≈2.1 km) south-east to its
+    # southern abutment, ~100 m from Wikipedia's dam coordinates (-0.8892, 37.5944).
+    closure_axis:
+      - {lat: -0.8698, lon: 37.5717}
+      - {lat: -0.8708, lon: 37.5744}
+      - {lat: -0.8717, lon: 37.5762}
+      - {lat: -0.8718, lon: 37.5789}
+      - {lat: -0.8714, lon: 37.5807}
+      - {lat: -0.8709, lon: 37.5823}
+      - {lat: -0.8720, lon: 37.5847}
+      - {lat: -0.87275, lon: 37.5850}
+      - {lat: -0.8800, lon: 37.5900}
+      - {lat: -0.8850, lon: 37.5930}
+      - {lat: -0.8905, lon: 37.5938}
+    closure_axis_source: >-
+      Digitised 2026-10-10 (prompt 05a) on a Sentinel-2 L2A median composite, Jun–Sep 2025
+      (Cloud Score+ ≥ 0.6); not a published value.
+    # On open water ~1 km west of the dam (same composite).
+    reservoir_seed: {lat: -0.8800, lon: 37.5800}
+    # On the Tana ~2 km downstream of the dam; the mask must never reach it.
+    downstream_check_point: {lat: -0.8575, lon: 37.6050}
+    # Half-width of the square searched around the dam. The reservoir reaches ~37 km west
+    # of the dam at the mask level; the mask must not touch the square's edge.
+    search_radius_km: 40
+    # Analysis grid for the water masks (UTM 37S, as Thwake) and its pixel size.
+    crs: EPSG:32737
+    scale_m: 10
+    # Scenes analysed: the whole DAHITI period (first point 2018-12-28, last 2026-09-05, ±
+    # the match window), which includes every Sentinel-era KenGen level (Nov 2023 – May
+    # 2026). Points below a DEM's flat lake surface are listed, not dropped. End exclusive.
+    scene_window: {start: 2018-12-01, end: 2026-09-15}
+    # Satellite-altimetry levels: an independent product, NOT gauge ground truth. Compared
+    # in their own block, never mixed into the gauge metrics. The raw download stays out of
+    # git (terms of reuse unconfirmed; data/external/dahiti/ is git-ignored); only derived
+    # comparisons are committed. Accepts the DAHITI layout (datetime;wse;wse_u) as
+    # downloaded. Without the file, the comparison runs without it.
+    altimetry:
+      path: data/external/dahiti/dahiti_40216_masinga_water_level_altimetry.csv
+      label: independent satellite altimetry (DAHITI/TUM) — not gauge ground truth
+      citation: >-
+        DAHITI target 40216 (Masinga), Sentinel-3B pass 0326, "normal heights", downloaded
+        2026-10-10. Schwatke et al. (2015), Hydrol. Earth Syst. Sci. 19, 4345–4364,
+        doi:10.5194/hess-19-4345-2015
+
+paths:
+  # Relative to the repository root. {name} is the reservoir key above.
+  published_figures: data/external/reference_reservoirs.csv
+  mask: data/validation/reference_{name}_mask.geojson
+  aev: data/validation/reference_{name}_aev.csv
+  scenes: data/validation/reference_{name}_scenes.csv
+  scenes_metadata: data/validation/reference_{name}_scenes.json
+  series: data/validation/reference_{name}_series.csv   # scenes + level per DEM
+  comparison: data/validation/reference_{name}_comparison.csv
+  metrics: data/validation/reference_{name}_metrics.json
+  figure: media/validation_reference.png

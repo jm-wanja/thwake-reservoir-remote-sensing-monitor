@@ -7,6 +7,11 @@ description: "Optional: compare Otsu thresholding with a machine-learning water 
 Prerequisites (human must have done these): 05c done (labelled set + evaluate harness exist).
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Show ML judgement — does a learned classifier beat Otsu thresholding, and is it worth it?
 
 Read first: docs/validation.md, docs/engineering-roadmap.md C1, docs/decisions/0005-dual-sensor-water-detection.md.

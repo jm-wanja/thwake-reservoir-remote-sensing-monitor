@@ -61,12 +61,14 @@ How the science works, in enough detail to implement and to explain publicly. Th
 2. Compute **MNDWI** = (Green − SWIR1) / (Green + SWIR1) (also NDWI for comparison).
 3. Threshold with **Otsu** on the histogram within a buffer around the expected shoreline (bimodal histograms work best there); fall back to a fixed value (~0) if Otsu fails.
 4. Record `valid_fraction` (share of max-extent not cloud-masked). Scenes below a minimum (e.g. 0.7) are flagged `low_coverage`.
+- *Implemented for the validation (prompt 05a, `src/thwake/water_s2.py`, `otsu.py`); Phase 2 extends it:* granules of one day are mosaicked; Cloud Score+ `cs` ≥ 0.6. The Otsu histogram (MNDWI, 200 bins over −1…1, 20 m) covers the max extent plus a 1 km land ring (`validation.otsu_buffer_m`), so both classes are present even when the reservoir is full. An Otsu threshold outside −0.5…0.5 is treated as failed and the fallback (0) is used; the choice is recorded per scene.
 
 ### 2.2 Sentinel-1 (radar)
 1. GRD, IW mode, VV (+VH) polarisation; consistent orbit direction where possible.
 2. Speckle filter (e.g. focal median or refined Lee).
 3. Calm water = low backscatter. Otsu threshold on VV; reference fixed threshold ≈ −18 dB (as used in GERD studies).
 4. Watch for false negatives from wind-roughened water and false positives from smooth surfaces / radar shadow (mask steep slopes using DEM).
+- *Implemented for the validation (prompt 05a, `src/thwake/water_s1.py`):* IW GRD VV, both orbit directions, slices of one day and pass mosaicked; focal median, 50 m radius. Otsu on a VV histogram (400 bins over −35…5 dB, 20 m) over the same region as for Sentinel-2; outside −25…−12 dB, the −18 dB fallback is used. Slope masking is not applied yet (prompt 06).
 
 ### 2.3 Post-processing (both sensors)
 - Clip to max-extent mask.
@@ -83,6 +85,7 @@ How the science works, in enough detail to implement and to explain publicly. Th
 Combine (report as low / best / high):
 - **Threshold sensitivity:** recompute area at Otsu ± a margin.
 - **Edge (mixed) pixels:** ± half a pixel ring along the shoreline.
+- **Obscured pixels** (clouds, no data; prompt 05a, `src/thwake/area.py`): low = none of them water, high = all of them water; best = the clear part's water share applied to them.
 - **DEM error:** Copernicus vs SRTM AEV curves.
 - Present as a shaded band on charts. Never show a bare single number publicly.
 
@@ -120,6 +123,7 @@ Combine (report as low / best / high):
 | Water masks | Visual inspection; S1 vs S2 agreement; Planet NICFI basemaps (free tropical monthly mosaics) if accessible |
 | Volume | Official storage/level announcements; Global Water Watch if Thwake appears |
 | Water quality | Any in-situ samples; plausibility vs rainfall/inflow events |
+| Area → level (method) | **Reference reservoir** (Masinga, KenGen gauge levels): our level from satellite area via DEM curves vs published levels, absolute and relative agreement. Results: [validation.md](validation.md) (prompt 05a) |
 
 ## References
 
@@ -130,3 +134,21 @@ Combine (report as low / best / high):
 - *Remote Sensing* (Jun 2025) — 17 reservoirs, S1/S2, NDWI + Otsu in GEE: https://doaj.org/article/3e8ba48190a8455f910b385e4dacef89
 - INRAE — Sentinel-1/2 reservoir volume monitoring: https://hal.inrae.fr/hal-04066655
 - Global Water Watch (WRI/Deltares/WWF): https://www.wri.org/initiatives/global-water-watch
+
+### Comparable monitoring systems
+- **Mekong Dam Monitor** (Stimson Center + Eyes on Earth) — weekly public monitoring of ~27 Mekong dams; Sentinel-1 primary, Sentinel-2 backup, Earth Engine classification, ALOS AW3D30 DEM for storage. The closest precedent for this project's method. Methods: https://www.stimson.org/2020/mekong-dam-monitor-methods-and-processes/ · HESS 2022: https://hess.copernicus.org/articles/26/2345/2022/
+- **Reservoir Assessment Tool (RAT)** (University of Washington, SASWE) — open-source framework for storage change, inflow, evaporation and outflow from multi-sensor satellite data; operational for the Mekong River Commission (v2); packaged in v3. Docs: https://rat-satellitedams.readthedocs.io/ · RAT 3.0 paper: https://depts.washington.edu/saswe/rat/user_manual/RAT30PaperGMD.pdf
+
+### Method references
+- Pena-Luque et al. (2021), *Remote Sensing* — Sentinel-1 vs Sentinel-2 water extent on 29 reservoirs; both show increased negative bias near full: https://doaj.org/article/c9906843336643f3aad490b42e0175ba
+- *Remote Sensing* 17(13), 2128 (2025) — S1/S2 NDWI + Otsu reservoir areas: https://www.mdpi.com/2072-4292/17/13/2128
+- Water level from Sentinel-1 SAR + DEMs (arXiv 2012.07627): https://arxiv.org/pdf/2012.07627
+
+### Global reservoir products (context / possible external checks)
+- Altimetry levels: **DAHITI** (TU Munich; Schwatke et al., 2015, doi:10.5194/hess-19-4345-2015), **Hydroweb** (LEGOS/CNES), **G-REALM** (USDA/NASA), **HydroSat** (Univ. Stuttgart).
+- Area/storage: **GRSAD** and the NASA MODIS/VIIRS reservoir product (Texas A&M/NASA), **GloLakes**, GRS, GRDL, **Global Water Watch**; **Pre-SWOT storage V2** (NASA PO.DAAC): https://podaac.jpl.nasa.gov/dataset/PRESWOT_HYDRO_L4_LAKE_STORAGE_TIME_SERIES_V2 ; **SWOT** (NASA/CNES, launched Dec 2022) measures water height and extent directly.
+- Intercomparison: Cooley et al. (2025), *Environmental Research Letters* — five global storage datasets agree on relative storage (median RMSE ~8.7% of capacity) far better than absolute storage (~19.4%), and worst for new, highly variable and developing-country reservoirs.
+
+### Sedimentation (long-term limitation)
+- Bunyasi et al. (2013) — Masinga lost ~215 MCM (13.6%) of design capacity by 2011: https://ir-library.ku.ac.ke/handle/123456789/9784
+- Maingi (2012), University of Nairobi — Masinga sediment budget (~6% loss in first 7 years): https://erepository.uonbi.ac.ke/items/bbdb43b8-38d8-4bd3-b07a-86fb9742adf2

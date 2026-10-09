@@ -7,6 +7,11 @@ description: "Phase 4: Regional change"
 Prerequisites (human must have done these): Phase 2 (ideally a full season of Phase 3). H6 for irrigation boundaries.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Analyse what the dam has changed (methodology §4).
 
 Read first: docs/methodology.md §4, AGENTS.md rule 9.

@@ -4,6 +4,11 @@ description: "Seasonal update review (recurring: ~June and ~January)"
 
 <!-- Prompt 90 — Seasonal update review (recurring: ~June and ~January). Run in a fresh session: /90-seasonal-update-review -->
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Review the latest rainy season's results and write a seasonal update.
 
 Read first: data/processed/thwake_timeseries.csv (and thwake_quality.csv if present),

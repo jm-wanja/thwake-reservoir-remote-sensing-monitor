@@ -7,6 +7,11 @@ description: "Phase 1.5: build a hand-labelled shoreline test set and accuracy m
 Prerequisites (human must have done these): 05a done and committed.
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Create the infrastructure for a labelled water/land test set; the human does the labelling.
 
 Read first: docs/decisions/0009-validation-phase.md, docs/validation.md, docs/engineering-roadmap.md A2.

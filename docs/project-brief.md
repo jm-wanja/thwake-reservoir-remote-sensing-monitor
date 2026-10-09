@@ -11,7 +11,8 @@ An **independent, satellite-based monitor of Thwake Dam reservoir** in lower eas
 3. **Rare timing.** A large reservoir filling for the first time, with a decade of pre-dam imagery in the archive, is an uncommon chance to document a landscape change from day one.
 4. **A real water-quality question.** The Athi River — the main inflow — carries wastewater and runoff from Nairobi. Whether that shows up as turbid or algae-rich water in the new reservoir matters to downstream users.
 5. **Semi-arid context.** In a hot, dry region, evaporation losses and dry-season behaviour of a large open reservoir matter for how much water is actually delivered.
-6. **Portfolio value.** Demonstrates in-demand skills: Earth Engine, radar + optical remote sensing, DEM-based volume modelling, time-series analysis, automation, and science communication.
+6. **Global products are weakest exactly here.** A 2025 intercomparison of five global satellite reservoir-storage datasets (Cooley et al., *Environmental Research Letters*) found agreement is worst for **new reservoirs, highly variable reservoirs and reservoirs in developing countries** (median absolute-storage disagreement ~19% of capacity vs ~9% for relative storage). Thwake is all three — a focused, validated monitor fills that gap.
+7. **Portfolio value.** Demonstrates in-demand skills: Earth Engine, radar + optical remote sensing, DEM-based volume modelling, time-series analysis, automation, and science communication.
 
 ## Who is it for?
 

@@ -9,6 +9,7 @@ import click
 from thwake import baseline as baseline_steps
 from thwake import ee_auth
 from thwake import reference as reference_steps
+from thwake import validation as validation_steps
 from thwake.config import REPO_ROOT, Config, ConfigError, load_config
 
 # In run order: each step reads the outputs of the ones before it. The composite is last
@@ -97,6 +98,38 @@ def baseline(step: str | None, verify: bool, write_manifest: bool, force: bool) 
         for name in [step] if step else BASELINE_STEPS:
             click.echo(_run_baseline_step(name, cfg))
     except (ConfigError, baseline_steps.BaselineError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+@cli.group()
+def validate() -> None:
+    """Validate the method (Phase 1.5): reference reservoir, labelled scenes."""
+
+
+@validate.command()
+@click.option(
+    "--name",
+    required=True,
+    help="Reference reservoir key in config/validation.yaml (e.g. masinga).",
+)
+@click.option(
+    "--compare-only",
+    is_flag=True,
+    help="Redo the comparison, metrics and figure from the saved scene areas "
+    "(data/validation/); no Earth Engine.",
+)
+def reference(name: str, compare_only: bool) -> None:
+    """Run the method on a reference reservoir and compare with published levels."""
+    v = validation_steps
+    try:
+        cfg = load_config()
+        v.reference_settings(cfg, name)
+        if not compare_only:
+            ee_auth.initialize(cfg)
+            v.build_reference(cfg, name, log=click.echo)
+        click.echo("Comparison with published figures ...")
+        click.echo(v.comparison_summary(v.compare_reference(cfg, name, log=click.echo)))
+    except (ConfigError, baseline_steps.BaselineError, v.ValidationError) as exc:
         raise click.ClickException(str(exc)) from exc
 
 

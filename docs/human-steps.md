@@ -98,7 +98,8 @@ Small doc-only changes can still go straight to `main` if you prefer.
 ## H8 — Ongoing account hygiene
 
 - [ ] **Re-verify Earth Engine non-commercial eligibility before 9 Apr 2028** (Cloud console → Earth Engine → Configuration → Manage registration). Google may also ask earlier.
-- [ ] Watch EECU usage on the Community tier (Configuration → Manage your EECU time usage); upgrade to Contributor only if limits are hit.
+- [x] Usage alert at 80% of the monthly Earth Engine limit (email channel) — set up 2026-10-10.
+- [ ] Watch EECU usage on the Community tier: Cloud console → IAM & Admin → **Quotas**, filter `earthengine.googleapis.com` → "Noncommercial EECU-seconds per month" (limit 540,000 s = 150 h). Check before approving any large agent run. 2026-10-10: ~72 h used (48%). Upgrade to Contributor only if limits are routinely hit (needs a billing account).
 - [ ] Rotate the service-account key yearly (new key → update GitHub secret → delete old key).
 - [ ] Check Earth Engine non-commercial terms/quotas haven't changed.
 - [ ] Watch GitHub Actions for failed runs (email notifications) and re-run or fix.

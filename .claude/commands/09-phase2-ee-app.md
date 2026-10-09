@@ -7,6 +7,11 @@ description: "Phase 2: Earth Engine App"
 Prerequisites (human must have done these): prompts 06–08 done. Human publishes the app (H5).
 If a prerequisite is not met, stop and tell the human.
 
+Earth Engine budget (AGENTS.md rule 11): free Community tier, 150 EECU-hours/month; one full
+Masinga run ≈ 42 EECU-hours. Estimate this task's Earth Engine cost before running anything;
+if it would exceed 10 EECU-hours, stop and ask me. Prefer offline/cached re-analysis and small
+test windows first. Report the actual cost at the end.
+
 Task: Write the Earth Engine App (JavaScript) in app/ee-app/main.js (ARCHITECTURE §3C, ADR 0003).
 
 Read first: ADR 0003, docs/methodology.md §2, config/thresholds.yaml,
