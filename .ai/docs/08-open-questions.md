@@ -1,0 +1,33 @@
+# Open Questions
+
+Resolve, then record the answer in the relevant doc/ADR and strike through here.
+
+## Blocking Phase 1
+1. **Exact dam-wall coordinates** — *Digitised 2026-10-09 (prompt 03).* Dam axis from the SW (Makueni) end −1.79363, 37.84005 to the NE (Kitui) end −1.78505, 37.85021, i.e. the visible ends of the embankment crest on a Sentinel-2 composite (Jun–Sep 2026), read to about ±20 m. Length ≈1,476 m (ESIA crest 1,500 m). Midpoint ≈ −1.7893, 37.8451, ~110 m from the prompt 01 estimate. Now in `config/settings.yaml` (`dam.wall_axis`) and `official_figures.csv` (`dam_axis_digitised`). ⚠️ verify: a human should check the axis on higher-resolution imagery (Google Earth / NICFI) or an official drawing. The ESIA's 1°46′S 37°43′E is wrong for the wall: it is the gazetteer point for "Thwake Sub-Surface Dam". See [02-background-thwake.md](02-background-thwake.md).
+2. ~~**Full supply level (FSL, m a.s.l.)**~~ — **912 m a.s.l.** (ESIA May 2025 §2.4; unchanged across 2009, 2014 and 2018 designs). No fallback needed.
+3. ~~**Official storage capacity** — 681 vs 688 MCM~~ — **688 MCM at FSL 912 m** is the current design figure (ESIA 2025; Ministry ToRs 2020, 2024). 681 MCM was the superseded CAS 2014 design (77 m dam); 825 MCM the Samez 2009 design; the SMEC web page's "668" is probably a typo.
+4. ~~**Construction start date**~~ — **27 March 2018** (Ministry ToR, Oct 2024). Both SRTM (2000) and Copernicus GLO-30 (tiles over Thwake acquired 2010-12 to 2014-05) predate it.
+5. **Has impoundment actually started?** — *As of 2026-10-09: no.* Official target: gates closed by **end of January 2027** (Water Secretary, 1 Sep 2026; PS site visit reports, 9 Oct 2026). Targets have slipped twice before. Re-check monthly; record the actual date and source when it happens.
+
+## New (from prompt 01 research, 2026-10-09)
+14. ~~**Project timeline wording.**~~ — *Resolved 2026-10-09.* Project brief, AGENTS.md §1 and roadmap Phase 2 now read "from first impoundment, currently targeted for early 2027" (was "from the Oct–Dec 2026 rains"). Actual date still tracked under question 5.
+15. **Design capacity uncertainty.** At the same FSL (912 m), design capacities were 825 → 681 → 688 MCM across design stages. These are presumably different surveys or curves. Prompt 04 should frame the DEM-vs-official check against this range. Can the SMEC 2018 area–elevation–capacity table be obtained (AfDB IPR, Ministry, SMEC)?
+16. **Crest elevation vs maximum flood level.** Studio Pietrangeli gives the crest at 920.5 m a.s.l.; the ESIA gives 920.5 m as the maximum flood level (freeboard 8.5 m). Affects only the AOI buffer above FSL. Low priority.
+17. **Saddle dams.** Two saddle dams (250 m Makueni side, 200 m Kitui side) protect low rim points up to the max flood level. *Prompt 03 finding (2026-10-09):* with only the wall as a barrier, the pre-dam GLO-30 basin overflows at these rim passes: (a) **≈913.0 m** at −1.79667, 37.82917, a ~1-pixel gap between two hills ~1.1 km WSW of the wall's SW end (Makueni side); (b) **≈917.6 m** at −1.78417, 37.85361, just past the wall's NE (Kitui) abutment; (c) **≈920.3 m** at −1.795, 37.835 (near the SW abutment and spillway), −1.77167, 37.87472 (NE) and −1.69333, 37.83361 (~10 km upstream). The gap at (a) is ~200–250 m wide at 920.5 m, which fits the 250 m Makueni saddle dam. But no embankment is visible there on 10 m Sentinel-2 (a track crosses the gap). ⚠️ verify: are (a) and (b) the saddle dam sites? Check higher-resolution imagery or design drawings. Impact: the max extent at 912 m is closed, but only ~1 m below pass (a), so DEM error at that pass matters (see question 20). The AOI (917 m) closes pass (a) automatically.
+18. **"Kenya's 2nd-largest reservoir"** (KNA, Jul 2026). Not checked against other Kenyan reservoirs' capacities. Verify before any public use.
+19. **AfDB documents unreachable by agent** (403). Human to download the Phase I appraisal report and IPR (Jun 2024) and check FSL, capacity and dead storage. Current-design dead storage / minimum operating level not found; the only figures found (231 MCM, 862 m) are from the superseded 2014 design.
+
+20. **Low rim margin at FSL.** The max extent (912 m) is only ~1 m below rim pass (a) in GLO-30, and GLO-30's vertical error is a few metres. In SRTM the basin may already overflow at FSL. Prompt 04 should decide how the SRTM cross-check handles this: reuse the GLO-30 max-extent mask, or apply the same wall + pass-closure barriers.
+21. **Max-extent area vs official.** The max extent is **30.36 km²** (GLO-30, ≤ 912 m, connected upstream of the wall) against the official ~29 km² ("2,900 ha", ESIA 2025, medium confidence): **+4.7%**. Possible causes: 30 m pixel edges, DEM error, the official figure being rounded or from a different survey. Revisit with the AEV curve in prompt 04.
+
+## Needed later
+6. Irrigation command-area boundaries (Phase 4).
+7. Any in-situ water-quality sampling programme (WRA, operator, universities) for Phase 3 validation.
+8. Does Global Water Watch (or DAHITI/G-REALM) pick up Thwake once filled? (validation)
+9. Is Planet NICFI basemap access still available for this region and non-commercial use?
+
+## Decisions pending
+10. Story-page charting library: Plotly vs Observable Plot (decide when building Phase 2 site).
+11. Map library: Leaflet vs MapLibre GL.
+12. Licence for the repo: code (MIT?) and data/text (CC BY 4.0?).
+13. Whether to publish a short methods preprint / blog post once Phase 2 has a full season.

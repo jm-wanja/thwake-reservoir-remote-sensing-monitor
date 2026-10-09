@@ -1,0 +1,20 @@
+# Earth Engine dataset IDs, from .ai/docs/04-data-sources.md (as known at planning time).
+# ⚠️ verify each ID and version in the EE Data Catalog before first use.
+# A version bump should be a one-line change here (AGENTS.md §6).
+
+sentinel2_sr: COPERNICUS/S2_SR_HARMONIZED
+cloud_score_plus: GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED
+sentinel1_grd: COPERNICUS/S1_GRD
+# 2024_1 release; the older COPERNICUS/DEM/GLO30 is deprecated in EE. Tile S02 E037 metadata:
+# acquired 2010-12-15 to 2013-04-21, before construction began (2018-03-27). Checked 2026-10-09.
+copernicus_dem_glo30: COPERNICUS/DEM/GLO30_2024_1
+srtm: USGS/SRTMGL1_003
+jrc_global_surface_water: JRC/GSW1_4/GlobalSurfaceWater
+esa_worldcover: ESA/WorldCover/v200
+dynamic_world: GOOGLE/DYNAMICWORLD/V1
+chirps_daily: UCSB-CHG/CHIRPS/DAILY
+era5_land_daily: ECMWF/ERA5_LAND/DAILY_AGGR
+# Append the HydroBASINS level (e.g. "6"); the level is not chosen yet.
+hydrobasins_prefix: WWF/HydroSHEDS/v1/Basins/hybas_
+# Optional; needs NICFI sign-up — open question 9.
+planet_nicfi_africa: projects/planet-nicfi/assets/basemaps/africa

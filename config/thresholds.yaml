@@ -1,0 +1,45 @@
+# Algorithm parameters. Starting values from .ai/docs/03-methodology.md.
+# null = not specified in the methodology yet; to be set (and justified) in the prompt
+# that implements it. Changes after Phase 2 starts need an ADR.
+
+baseline:
+  aev_level_step_m: 0.5            # methodology §1.3
+  aoi_buffer_above_fsl_m: 5        # methodology §1.1 ("e.g. +5 m")
+  # Max extent and AOI (methodology §1.1–1.2), set in prompt 03.
+  search_radius_km: 20             # half-width of the square searched around the wall; the
+                                   # outputs must not touch its edge (reservoir ~12 km long)
+  eight_connected: true            # 8-neighbour flood fill so 1-pixel diagonal channels connect
+  wall_barrier_half_width_m: 45    # wall burned into the pre-dam DEM as a 90 m (3-pixel) strip,
+                                   # too wide for an 8-connected fill to step through diagonally
+  abutment_extension_m: 300        # extend the digitised axis into the abutment hills, so the
+                                   # barrier ends on ground above the AOI level
+  pass_closure_radius_m: 150       # AOI only: disk that closes a rim overflow pass (saddle)
+  pass_level_tolerance_m: 0.1      # precision of the overflow-level search
+  max_pass_closures: 10            # stop with an error rather than close passes indefinitely
+
+sentinel2:
+  water_index: MNDWI               # methodology §2.1; NDWI computed for comparison
+  threshold_method: otsu
+  fallback_threshold: 0.0          # methodology §2.1 ("~0")
+  min_valid_fraction: 0.7          # methodology §2.1 ("e.g. 0.7") → qa_flag low_coverage
+  cloud_score_plus_threshold: null # set in prompt 06
+
+sentinel1:
+  instrument_mode: IW
+  polarisation: VV
+  threshold_method: otsu
+  fixed_threshold_db: -18.0        # methodology §2.2 (GERD studies reference value)
+  speckle_filter: null             # focal median or refined Lee — choose in prompt 06
+  speckle_filter_radius_m: null
+  max_slope_deg: null              # radar-shadow / steep-slope mask — set in prompt 06
+
+postprocess:
+  min_component_area_m2: null      # remove isolated specks — set in prompt 06
+
+uncertainty:
+  otsu_margin: null                # threshold sensitivity ± margin — set in prompt 07
+  edge_ring_pixels: 0.5            # methodology §2.5 (± half a pixel ring)
+
+qa:
+  sensor_pair_window_days: 2       # methodology §2.6 (±2 days)
+  sensor_disagree_pct: null        # methodology §2.6 ("X%") — set in prompt 07

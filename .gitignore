@@ -1,0 +1,37 @@
+# --- Secrets: never commit (AGENTS.md §5.2, ARCHITECTURE.md §8) ---
+.env
+.env.*
+!.env.example
+credentials/
+# Service-account keys are .json files with unpredictable names, so all JSON is
+# ignored. Allow-list a specific file with "!path/to/file.json" only if it is
+# definitely not a credential.
+*.json
+!.claude/settings.json
+
+# --- Large rasters: never commit (AGENTS.md §5.3) ---
+*.tif
+*.tiff
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Quarto ---
+site/_site/
+.quarto/
+
+# --- Local tooling / OS ---
+.memsearch/
+.claude/settings.local.json
+.DS_Store

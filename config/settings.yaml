@@ -1,0 +1,53 @@
+# Project settings. Facts come from data/external/official_figures.csv (with sources).
+# Values marked ⚠️ verify are unconfirmed — see .ai/docs/08-open-questions.md.
+# All figures below await human verification (HUMAN-STEPS.md H6).
+
+dam:
+  name: Thwake Dam
+  river: Athi River (confluence with Thwake River)
+  counties: [Makueni, Kitui]
+  # ESIA May 2025 §2.4 (current SMEC 2018 design). Open question 2 (resolved).
+  full_supply_level_m_asl: 912
+  # Current design capacity at FSL (ESIA 2025; Ministry ToRs 2020, 2024). Used for pct_full.
+  # Earlier designs gave 681 and 825 MCM at the same FSL — see open questions 3 and 15.
+  design_capacity_mcm: 688
+  # ESIA 2025 §2.4. Labelled as crest elevation by another source — open question 16.
+  maximum_flood_level_m_asl: 920.5
+  # ⚠️ verify: dam axis DIGITISED (not a published value) on 2026-10-09 (prompt 03) from a
+  # Sentinel-2 L2A median composite (Jun–Sep 2026, Cloud Score+ ≥ 0.6): the visible ends of
+  # the embankment crest, read to about ±20 m. Length ≈1.48 km (ESIA: crest 1,500 m).
+  # Midpoint ≈ -1.7893, 37.8451, ~110 m from the prompt 01 estimate. Open question 1.
+  # SW (Makueni) end first, NE (Kitui) end second.
+  wall_axis:
+    - {lat: -1.79363, lon: 37.84005}
+    - {lat: -1.78505, lon: 37.85021}
+  wall_axis_source: >-
+    Digitised 2026-10-09 (prompt 03) on a Sentinel-2 L2A median composite, Jun–Sep 2026;
+    not a published value. ⚠️ verify (open question 1).
+  # Flood-fill start for the max-extent mask: the Athi–Thwake confluence (OpenStreetMap;
+  # see official_figures.csv), ~1 km upstream of the wall and on the pre-dam river bed.
+  reservoir_seed: {lat: -1.78099, lon: 37.84029}
+  # A point on the Athi channel ~2.5 km downstream of the wall (digitised on the same
+  # composite). The max extent and AOI must never reach it; used to detect rim leaks.
+  downstream_check_point: {lat: -1.81, lon: 37.86}
+
+dates:
+  # Contractor site handover = commencement (Ministry ToR, Oct 2024). Both DEMs predate it.
+  construction_start: 2018-03-27
+  # ⚠️ verify: impoundment has not started as of 2026-10-09; official target is end of
+  # January 2027 (a projection, not an event). Set the actual date + source when it happens.
+  # Open question 5.
+  impoundment_start: null
+
+paths:
+  # Relative to the repository root.
+  aoi: data/baseline/aoi.geojson
+  max_extent: data/baseline/max_extent.geojson
+  aev_curve: data/baseline/aev_curve_v1.csv
+  timeseries: data/processed/thwake_timeseries.csv
+  official_figures: data/external/official_figures.csv
+
+earth_engine:
+  # The Cloud project ID is read from EE_PROJECT in .env, never stored here.
+  # Cloud assets folder for baseline layers (created 2026-10-09, HUMAN-STEPS.md H2).
+  assets_folder: projects/thwake-monitor/assets/thwake
