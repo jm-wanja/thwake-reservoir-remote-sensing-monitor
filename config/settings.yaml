@@ -1,6 +1,6 @@
 # Project settings. Facts come from data/external/official_figures.csv (with sources).
-# Values marked ⚠️ verify are unconfirmed — see .ai/docs/08-open-questions.md.
-# All figures below await human verification (HUMAN-STEPS.md H6).
+# Values marked ⚠️ verify are unconfirmed — see docs/open-questions.md.
+# All figures below await human verification (human-steps.md H6).
 
 dam:
   name: Thwake Dam
@@ -49,5 +49,5 @@ paths:
 
 earth_engine:
   # The Cloud project ID is read from EE_PROJECT in .env, never stored here.
-  # Cloud assets folder for baseline layers (created 2026-10-09, HUMAN-STEPS.md H2).
+  # Cloud assets folder for baseline layers (created 2026-10-09, human-steps.md H2).
   assets_folder: projects/thwake-monitor/assets/thwake

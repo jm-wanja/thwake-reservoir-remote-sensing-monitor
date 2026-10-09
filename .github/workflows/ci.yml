@@ -11,7 +11,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to commit SHAs (supply-chain safety); Dependabot proposes updates.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # Runs before dependencies are installed, so the checkout holds only tracked files.
       - name: Fail on files larger than 10 MB
@@ -23,15 +24,18 @@ jobs:
             exit 1
           fi
 
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
 
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Lint
+      - name: Lint and format
         run: |
           uv run ruff check .
           uv run ruff format --check .
 
-      - name: Test
+      - name: Type check
+        run: uv run mypy
+
+      - name: Test (with coverage; includes agent-guardrail tests)
         run: uv run pytest

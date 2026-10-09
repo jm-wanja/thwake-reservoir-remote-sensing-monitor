@@ -1,8 +1,8 @@
 """Authenticate to Earth Engine: user credentials locally, service account in CI.
 
-Locally, run ``earthengine authenticate`` once (HUMAN-STEPS.md H2); the stored user
+Locally, run ``earthengine authenticate`` once (human-steps.md H2); the stored user
 credentials are then picked up here. The service-account path for GitHub Actions is added
-with the scheduled workflow (prompt 11). See .ai/docs/06-deployment.md.
+with the scheduled workflow (prompt 11). See docs/deployment.md.
 """
 
 from __future__ import annotations

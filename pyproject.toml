@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Remote sensing monitor: independent satellite record of Thwake Dam reservoir (Kenya): filling, water-quality signals and regional change."
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
-# License: not chosen yet — see .ai/docs/08-open-questions.md #12.
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "click==8.5.0",
     "earthengine-api==1.7.47",
@@ -20,8 +21,12 @@ thwake = "thwake.cli:main"
 
 [dependency-groups]
 dev = [
+    "mypy==2.4.0",
+    "pandas-stubs==3.0.5.260914",
     "pytest==9.1.1",
+    "pytest-cov==7.1.0",
     "ruff==0.16.10",
+    "types-pyyaml==6.0.12.20260906",
 ]
 
 [build-system]
@@ -47,4 +52,22 @@ convention = "google"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+addopts = "-ra --cov=thwake --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+source = ["thwake"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/thwake"]
+strict_optional = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# Earth Engine / geemap / geopandas ship without type stubs.
+module = ["ee", "ee.*", "geemap", "geemap.*", "geopandas", "geopandas.*", "shapely", "shapely.*"]
+ignore_missing_imports = true

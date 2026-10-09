@@ -1,8 +1,8 @@
 """Fetch and filter S1, S2, CHIRPS and ERA5 for the AOI and date range.
 
 Also applies Sentinel-2 cloud masking. So far only the baseline DEM is implemented; the
-scene collections follow in prompt 06. See .ai/ARCHITECTURE.md §3B and
-.ai/docs/03-methodology.md §2.1–2.2.
+scene collections follow in prompt 06. See docs/architecture.md §3B and
+docs/methodology.md §2.1–2.2.
 """
 
 from __future__ import annotations

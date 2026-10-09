@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software or its data, please cite it as below."
+title: "Thwake Reservoir Remote Sensing Monitor"
+abstract: >-
+  An independent, satellite-based record of Thwake Dam reservoir (Makueni/Kitui, Kenya):
+  reservoir area, level, volume and percentage full from Sentinel-1/2 imagery and pre-dam
+  elevation models, with water-quality indicators and regional change, built on Google Earth Engine.
+type: software
+authors:
+  - given-names: Julie
+    family-names: Mugira
+repository-code: "https://github.com/jm-wanja/thwake-reservoir-remote-sensing-monitor"
+url: "https://github.com/jm-wanja/thwake-reservoir-remote-sensing-monitor"
+license: MIT
+version: 0.1.0
+keywords:
+  - remote sensing
+  - reservoir monitoring
+  - Sentinel-1
+  - Sentinel-2
+  - Google Earth Engine
+  - Kenya
+  - water resources

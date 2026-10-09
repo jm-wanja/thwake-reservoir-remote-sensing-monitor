@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse hook (Bash): agents may only READ git/GitHub repositories.
 # Any git or gh command not on the read-only allowlist is denied.
-# Humans run commits/pushes themselves — see .ai/HUMAN-STEPS.md (H3).
+# Humans run commits/pushes themselves — see docs/human-steps.md (H3).
 
 cmd=$(jq -r '.tool_input.command // empty')
 [ -z "$cmd" ] && exit 0
@@ -33,7 +33,7 @@ while IFS= read -r seg; do
       ""|status|diff|log|show|blame|ls-files|ls-tree|rev-parse|rev-list|describe|shortlog|grep|cat-file|reflog|whatchanged|check-ignore|version|help|--version|--help) ;;
       branch)
         printf '%s' "$rest" | grep -Eq '(^| )(-d|-D|-m|-M|-c|-C|--delete|--move|--copy|--set-upstream-to|-u|--unset-upstream|--edit-description|-f|--force)( |$)' \
-          && deny "Agents may only read repos: 'git branch' with a modifying flag is blocked. Ask the human (HUMAN-STEPS.md H3)." ;;
+          && deny "Agents may only read repos: 'git branch' with a modifying flag is blocked. Ask the human (human-steps.md H3)." ;;
       remote)
         case "${rest%% *}" in ""|-v|--verbose|show|get-url) ;; *) deny "Agents may only read repos: 'git remote $rest' is blocked." ;; esac ;;
       config)
@@ -42,7 +42,7 @@ while IFS= read -r seg; do
       stash)
         case "${rest%% *}" in list|show) ;; *) deny "Agents may only read repos: 'git stash' changes are blocked." ;; esac ;;
       *)
-        deny "Agents may only read repos: 'git $sub' is blocked. The human commits/pushes/tags (see .ai/HUMAN-STEPS.md H3). Suggest the command instead." ;;
+        deny "Agents may only read repos: 'git $sub' is blocked. The human commits/pushes/tags (see docs/human-steps.md H3). Suggest the command instead." ;;
     esac
   fi
 
@@ -50,7 +50,7 @@ while IFS= read -r seg; do
     a="${2:-}"; b="${3:-}"
     case "$a $b" in
       "auth status"|"repo view"|"repo list"|"issue list"|"issue view"|"pr list"|"pr view"|"pr diff"|"pr checks"|"pr status"|"run list"|"run view"|"workflow list"|"workflow view"|"release list"|"release view"|"browse "*|"search "*|"--version "|"help "*) ;;
-      *) deny "Agents may only read repos: 'gh $a $b' is blocked (incl. gh api). The human does GitHub changes (HUMAN-STEPS.md H3/H4)." ;;
+      *) deny "Agents may only read repos: 'gh $a $b' is blocked (incl. gh api). The human does GitHub changes (human-steps.md H3/H4)." ;;
     esac
   fi
 

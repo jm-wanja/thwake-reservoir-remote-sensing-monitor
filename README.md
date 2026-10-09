@@ -4,7 +4,7 @@
 
 An independent, satellite-based record of **Thwake Dam reservoir** (Makueni/Kitui, Kenya) — how fast it fills, whether the water is clean, and what it changes in the region. Built entirely on free, public data.
 
-> **Status:** Phase 0 complete (planning, research, scaffold). Phase 1 (pre-filling baseline) next. First impoundment is officially targeted for early 2027.
+> **Status:** Phase 1 (pre-filling baseline) in progress — reservoir extent mapped (30.4 km² at full supply level vs ~29 km² official). Next: volume curve, then a validation phase before filling, officially targeted for early 2027.
 
 ## Live links
 
@@ -28,34 +28,37 @@ Thwake Dam is planned to be one of Kenya's largest reservoirs (688 million m³ a
 
 | Read this | For |
 |-----------|-----|
-| [Project brief](.ai/docs/01-project-brief.md) | Why it exists, who it's for, goals, non-goals, success criteria |
-| [Background: Thwake Dam](.ai/docs/02-background-thwake.md) | Sourced facts about the dam (FSL, capacity, timeline) |
-| [Methodology](.ai/docs/03-methodology.md) | Water detection, volume estimation, uncertainty, water quality, validation, references |
-| [Data sources](.ai/docs/04-data-sources.md) | Every dataset, with Earth Engine IDs, resolution and licence |
-| [Architecture](.ai/ARCHITECTURE.md) | System design, data flow, repository layout, data contracts, deployment |
-| [Decision records](.ai/decisions/) | Key decisions with the alternatives considered (stack, sensors, volume method, naming) |
-| [Roadmap](.ai/docs/05-roadmap.md) | Phases, milestones and update cadence |
-| [Risks & limitations](.ai/docs/07-risks-and-limitations.md) | What the project can and cannot claim |
-| [Open questions](.ai/docs/08-open-questions.md) | What is still being verified |
-| [Glossary](.ai/docs/glossary.md) | Plain-language definitions of technical terms |
+| [Project brief](docs/project-brief.md) | Why it exists, who it's for, goals, non-goals, success criteria |
+| [Background: Thwake Dam](docs/background-thwake.md) | Sourced facts about the dam (FSL, capacity, timeline) |
+| [Methodology](docs/methodology.md) | Water detection, volume estimation, uncertainty, water quality, validation, references |
+| [Data sources](docs/data-sources.md) | Every dataset, with Earth Engine IDs, resolution and licence |
+| [Architecture](docs/architecture.md) | System design, data flow, repository layout, data contracts, deployment |
+| [Decision records](docs/decisions/) | Key decisions with the alternatives considered (stack, sensors, volume method, naming) |
+| [Roadmap](docs/roadmap.md) | Phases (incl. a validation phase before filling), milestones, update cadence |
+| [Engineering roadmap](docs/engineering-roadmap.md) | Quality plan: validation, provenance, CI, ML comparison |
+| [Risks & limitations](docs/risks-and-limitations.md) | What the project can and cannot claim |
+| [Open questions](docs/open-questions.md) | What is still being verified |
+| [Glossary](docs/glossary.md) | Plain-language definitions of technical terms |
 
-Full index: [`.ai/README.md`](.ai/README.md).
+Full index: [`docs/README.md`](docs/README.md).
 
 ### How this project is built
 
-Development uses AI coding agents under explicit rules ([`AGENTS.md`](.ai/AGENTS.md)) and task prompts ([`.ai/prompts/`](.ai/prompts/README.md)). Decisions, fact-checking, approvals, commits and publishing are done by the author ([human steps](.ai/HUMAN-STEPS.md)); agents are technically blocked from writing to git repositories.
+Development uses AI coding agents under explicit rules ([`AGENTS.md`](AGENTS.md)), with each task a reviewed slash command in [`.claude/commands/`](.claude/commands/) ([workflow](docs/agent-workflow.md)). Decisions, fact-checking, approvals, commits and publishing are done by the author ([human steps](docs/human-steps.md)); agents are technically blocked from writing to git repositories.
 
 ## Development
 
 ```bash
-uv sync
-uv run ruff check .
-uv run pytest
+make install      # uv sync from the lockfile
+make check        # ruff + mypy + pytest with coverage (what CI runs)
+make help         # all tasks
 uv run python -m thwake --help
 ```
 
+Quality gates: CI on every push (lint, format, type check, tests incl. agent-guardrail tests, large-file guard), pre-commit hooks (incl. secret scan), Dependabot, actions pinned by SHA.
+
 Earth Engine access requires a registered Google Cloud project; set `EE_PROJECT` in a local `.env` (see [`.env.example`](.env.example)) and run `uv run earthengine authenticate`.
 
-## Licence
+## Licence & citation
 
-Not chosen yet (see [open questions](.ai/docs/08-open-questions.md)).
+Code: [MIT](LICENSE). Data, figures and documentation: [CC BY 4.0](LICENSE-DATA.md); third-party data keep their own terms. To cite this work, see [`CITATION.cff`](CITATION.cff).

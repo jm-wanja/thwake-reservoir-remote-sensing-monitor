@@ -1,4 +1,4 @@
-# Earth Engine dataset IDs, from .ai/docs/04-data-sources.md (as known at planning time).
+# Earth Engine dataset IDs, from docs/data-sources.md (as known at planning time).
 # ⚠️ verify each ID and version in the EE Data Catalog before first use.
 # A version bump should be a one-line change here (AGENTS.md §6).
 

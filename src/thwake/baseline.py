@@ -1,6 +1,6 @@
 """Phase 1 baseline: area of interest (AOI) and max-extent mask.
 
-Method: .ai/docs/03-methodology.md §1.1–1.2 and ADR 0006.
+Method: docs/methodology.md §1.1–1.2 and ADR 0006.
 
 - **Max extent:** Copernicus GLO-30 pixels at or below the full supply level (FSL) that are
   connected to the reservoir seed (Athi–Thwake confluence). The DEM predates the dam, so the
@@ -38,7 +38,7 @@ from thwake.config import REPO_ROOT, Config, ConfigError
 LonLat = tuple[float, float]
 GEOD = Geod(ellps="WGS84")
 METHOD_VERSION = "extent-v1"
-METHOD_REF = ".ai/docs/03-methodology.md §1.1–1.2"
+METHOD_REF = "docs/methodology.md §1.1–1.2"
 # Output coordinates are rounded to this grid (~0.1 m), far finer than the 30 m DEM.
 COORD_PRECISION_DEG = 1e-6
 # An output this close to the search-area edge (~110 m, 3–4 DEM pixels) counts as touching.
@@ -47,6 +47,18 @@ EDGE_MARGIN_DEG = 0.001
 
 class BaselineError(Exception):
     """Raised when a baseline output fails a sanity check."""
+
+
+# Earth Engine caps per-request pixel counts; generous for a ~100 km² region at 30 m.
+MAX_PIXELS = 1_000_000_000
+
+
+def _get_info(obj: Any) -> Any:
+    """Evaluate an Earth Engine object client-side, failing loudly on an empty response."""
+    value = obj.getInfo()
+    if value is None:
+        raise BaselineError("Earth Engine returned no data for a required request")
+    return value
 
 
 # --- Settings ---------------------------------------------------------------------------
@@ -167,7 +179,7 @@ def extend_line(coords: Sequence[LonLat], metres: float) -> list[LonLat]:
     """
     if len(coords) < 2:
         raise ValueError("A line needs at least two points")
-    points = [tuple(map(float, c)) for c in coords]
+    points = [(float(c[0]), float(c[1])) for c in coords]
     if metres == 0:
         return points
     (x0, y0), (x1, y1) = points[0], points[1]
@@ -364,7 +376,7 @@ def fsl_provenance(fsl_m: float, rows: list[dict[str, str]]) -> dict[str, Any]:
         return {
             "fsl_is_fallback": False,
             "fsl_note": "Design value from official documents (data/external/"
-            "official_figures.csv); awaiting human verification (HUMAN-STEPS.md H6).",
+            "official_figures.csv); awaiting human verification (human-steps.md H6).",
             "fsl_sources": [r["source_url"] for r in matches],
         }
     return {
@@ -444,13 +456,13 @@ class EarthEngineFill:
             crs=self.projection,
             geometryType="polygon",
             eightConnected=self.settings.eight_connected,
-            maxPixels=1e9,
+            maxPixels=MAX_PIXELS,
         )
         return polygons.filterBounds(self.seed)
 
     def leaks(self, level: float, closures: list[PassClosure]) -> bool:
         """True if the fill at ``level`` reaches the downstream check point."""
-        return self.fill(level, closures).filterBounds(self.probe).size().getInfo() > 0
+        return int(_get_info(self.fill(level, closures).filterBounds(self.probe).size())) > 0
 
     def locate_pass(self, below: float, above: float, closures: list[PassClosure]) -> list[LonLat]:
         """Centroids of rim pixels that join the reservoir to outside between two levels.
@@ -468,13 +480,16 @@ class EarthEngineFill:
             crs=self.projection,
             geometryType="centroid",
             eightConnected=True,
-            maxPixels=1e9,
+            maxPixels=MAX_PIXELS,
         )
-        return [tuple(f["geometry"]["coordinates"]) for f in points.getInfo()["features"]]
+        return [
+            (float(f["geometry"]["coordinates"][0]), float(f["geometry"]["coordinates"][1]))
+            for f in _get_info(points)["features"]
+        ]
 
     def geometry(self, fill: ee.FeatureCollection, name: str) -> BaseGeometry:
         """Download a fill as a valid shapely geometry (exactly one polygon expected)."""
-        info = ee.Dictionary({"n": fill.size(), "geometry": fill.geometry()}).getInfo()
+        info = _get_info(ee.Dictionary({"n": fill.size(), "geometry": fill.geometry()}))
         if info["n"] != 1:
             raise BaselineError(
                 f"{name}: expected one polygon at the reservoir seed, got {info['n']}; "
@@ -488,13 +503,13 @@ class EarthEngineFill:
         sampled = self.dem.reduceRegions(
             collection=features, reducer=ee.Reducer.first(), crs=self.projection
         )
-        return sampled.aggregate_array("first").getInfo()
+        return list(_get_info(sampled.aggregate_array("first")))
 
     def acquisition_window(self) -> str:
         """``start/end`` dates of the DEM tiles used (ISO 8601 interval)."""
         start = ee.Date(self.tiles.aggregate_min("system:time_start")).format("YYYY-MM-dd")
         end = ee.Date(self.tiles.aggregate_max("system:time_end")).format("YYYY-MM-dd")
-        return "/".join(ee.List([start, end]).getInfo())
+        return "/".join(_get_info(ee.List([start, end])))
 
 
 # --- Step -------------------------------------------------------------------------------

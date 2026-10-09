@@ -1,4 +1,4 @@
-# Algorithm parameters. Starting values from .ai/docs/03-methodology.md.
+# Algorithm parameters. Starting values from docs/methodology.md.
 # null = not specified in the methodology yet; to be set (and justified) in the prompt
 # that implements it. Changes after Phase 2 starts need an ADR.
 

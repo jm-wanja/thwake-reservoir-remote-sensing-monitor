@@ -1,4 +1,4 @@
-# --- Secrets: never commit (AGENTS.md §5.2, ARCHITECTURE.md §8) ---
+# --- Secrets: never commit (AGENTS.md §5.2, architecture.md §8) ---
 .env
 .env.*
 !.env.example
@@ -35,3 +35,10 @@ site/_site/
 .memsearch/
 .claude/settings.local.json
 .DS_Store
+
+# --- Coverage / type checking ---
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.mypy_cache/
