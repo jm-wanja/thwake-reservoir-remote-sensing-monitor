@@ -1,0 +1,16 @@
+source,collection,period,class_value,class_name,common_class,area_ha,area_pct
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,10,Tree cover,trees,106.6,3.51
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,20,Shrubland,shrub_and_scrub,1183.3,38.98
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,30,Grassland,grass,553.2,18.22
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,40,Cropland,crops,853.5,28.11
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,50,Built-up,built,1.0,0.03
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,60,Bare / sparse vegetation,bare,296.1,9.75
+esa_worldcover,ESA/WorldCover/v200,2021-01-01/2021-12-31,80,Permanent water bodies,water,43.1,1.42
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,0,water,water,167.3,5.51
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,1,trees,trees,623.8,20.55
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,2,grass,grass,0.6,0.02
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,3,flooded_vegetation,flooded_vegetation,5.9,0.19
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,4,crops,crops,348.1,11.47
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,5,shrub_and_scrub,shrub_and_scrub,1670.1,55.01
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,6,built,built,31.2,1.03
+dynamic_world_mode,GOOGLE/DYNAMICWORLD/V1,2026-06-01/2026-10-01,7,bare,bare,189.2,6.23

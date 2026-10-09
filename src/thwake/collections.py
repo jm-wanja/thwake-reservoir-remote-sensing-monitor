@@ -1,7 +1,8 @@
 """Fetch and filter S1, S2, CHIRPS and ERA5 for the AOI and date range.
 
-Also applies Sentinel-2 cloud masking. So far only the baseline DEMs (Copernicus GLO-30,
-SRTM) are implemented; the scene collections follow in prompt 06. See docs/architecture.md §3B and
+Also applies Sentinel-2 cloud masking. So far the baseline DEMs (Copernicus GLO-30, SRTM)
+and Cloud Score+ masked Sentinel-2 scenes (for the pre-filling composite) are implemented;
+the Phase 2 scene filters follow in prompt 06. See docs/architecture.md §3B and
 docs/methodology.md §2.1–2.2.
 """
 
@@ -77,3 +78,35 @@ def dem_by_name(cfg: Config, name: str, region: ee.Geometry) -> tuple[ee.Image, 
     if name == "srtm":
         return srtm_dem(cfg)
     raise KeyError(f"Unknown DEM {name!r}; expected one of {sorted(DEM_COLLECTION_KEYS)}")
+
+
+def sentinel2_clear(
+    cfg: Config, region: ee.Geometry, start: str, end: str, cs_min: float
+) -> ee.ImageCollection:
+    """Sentinel-2 L2A scenes over ``region`` with cloudy pixels masked by Cloud Score+.
+
+    Each scene is linked to its Cloud Score+ image; pixels with ``cs`` below ``cs_min`` are
+    masked in every band.
+
+    Args:
+        cfg: Loaded configuration (collection IDs from ``ee_collections.yaml``).
+        region: Area the scenes must intersect.
+        start: First date (inclusive), ``YYYY-MM-DD``.
+        end: Last date (exclusive), ``YYYY-MM-DD``.
+        cs_min: Minimum Cloud Score+ ``cs`` (0–1) for a pixel to count as clear.
+
+    Returns:
+        The masked scenes, with the ``cs`` band dropped.
+    """
+
+    def mask(image: ee.Image) -> ee.Image:
+        clear = image.updateMask(image.select("cs").gte(cs_min))
+        return clear.select(image.bandNames().remove("cs"))
+
+    return (
+        ee.ImageCollection(cfg.ee_collections["sentinel2_sr"])
+        .filterBounds(region)
+        .filterDate(start, end)
+        .linkCollection(ee.ImageCollection(cfg.ee_collections["cloud_score_plus"]), ["cs"])
+        .map(mask)
+    )

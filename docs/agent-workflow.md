@@ -19,7 +19,7 @@ Rules for agents live in [AGENTS.md](../AGENTS.md) (loaded automatically by Clau
 | `/02-scaffold-repo` | 0 | H1 | ☑ |
 | `/03-phase1-aoi-max-extent` | 1 | H2 | ☑ |
 | `/04-phase1-aev-curve` | 1 | — | ☐ |
-| `/05-phase1-baseline-freeze` | 1 | review & approve freeze | ☐ |
+| `/05-phase1-baseline-freeze` | 1 | review & approve freeze | ☑ (frozen 2026-10-10; tag pending) |
 | `/05a-validation-reference-reservoir` | 1.5 | approve reference choice | ☐ |
 | `/05b-validation-labelled-set` | 1.5 | label ~25 scenes (H6) | ☐ |
 | `/05c-validation-evaluation-harness` | 1.5 | approve thresholds | ☐ |

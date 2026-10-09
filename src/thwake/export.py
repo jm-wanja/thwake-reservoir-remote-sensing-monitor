@@ -135,7 +135,7 @@ def plot_aev_curve(curves: Mapping[str, AEVCurve], metadata: Mapping[str, Any], 
     ax_area.legend(loc="lower right", frameon=False, fontsize=8)
     fig.suptitle(
         "Thwake reservoir: area and volume by water level from two pre-dam elevation "
-        f"models (curve {metadata['method_version']}, draft)",
+        f"models (curve {metadata['method_version']}, baseline v1)",
         x=0.01,
         ha="left",
         fontsize=11,

@@ -1,6 +1,6 @@
 {
  "name": "Thwake reservoir area–elevation–volume curve v1",
- "status": "DRAFT — not frozen. The baseline freeze is prompt 05 (AGENTS.md rule 8).",
+ "status": "Baseline v1; freeze status in docs/baseline-v1.md",
  "csv": "data/baseline/aev_curve_v1.csv",
  "columns": {
   "level_m_asl": "water level, m above sea level (each DEM's own vertical datum)",
@@ -10,11 +10,12 @@
  },
  "full_supply_level_m_asl": 912.0,
  "fsl_is_fallback": false,
- "fsl_note": "Design value from official documents (data/external/official_figures.csv); awaiting human verification (human-steps.md H6).",
+ "fsl_note": "Design value from official documents (data/external/official_figures.csv); human-verified on 2026-10-10 against ESIA May 2025 §2.4 \"New Design Parameters\" (reservoir storage 688 MCM, FSL 912 m a.s.l., freeboard 8.5 m, maximum flood level 920.5 m) and §2.3 (\"the contour line 912 MASl represents this volume\").",
  "fsl_sources": [
   "https://www.irrigation.go.ke/sites/default/files/downloads/ENVIRONMENT%20SOCIAL%20IMPACT%20ASSESSMENT%20(ESIA)%20-%20THWAKE%20MULTIPURPOSE%20WATER%20DEVELOPMENT%20PROGRAM%20(Final).pdf",
   "https://water.go.ke/sites/default/files/2025-01/TERMS%20OF%20REFERENCE%20FOR%20CONSULTING%20SERVICES%20FOR%20ATHI%20RIVER%20BASIN%20MODELLING.pdf"
  ],
+ "fsl_verified": "2026-10-10",
  "level_step_m": 0.5,
  "max_extent": {
   "path": "data/baseline/max_extent.geojson",
@@ -30,7 +31,7 @@
    "source_url": "https://www.irrigation.go.ke/sites/default/files/downloads/ENVIRONMENT%20SOCIAL%20IMPACT%20ASSESSMENT%20(ESIA)%20-%20THWAKE%20MULTIPURPOSE%20WATER%20DEVELOPMENT%20PROGRAM%20(Final).pdf",
    "source_date": "2025-05",
    "confidence": "high",
-   "notes": "Current design (80.5 m dam). Same figure in Ministry ToRs 2020 and Oct 2024."
+   "notes": "Current design (80.5 m dam). Same figure in Ministry ToRs 2020 and Oct 2024. Human-verified by the author 2026-10-10 (ESIA §2.4; §2.3: 'the contour line 912 MASl represents this volume')."
   },
   {
    "value": "688",
@@ -52,6 +53,13 @@
    "source_date": "2025-05",
    "confidence": "medium",
    "notes": "SUPERSEDED: Samez 2009 preliminary design (84 m dam, FSL 912), as summarised in ESIA §2.2."
+  },
+  {
+   "value": "681",
+   "source_url": "https://www.afdb.org/fileadmin/uploads/afdb/Documents/Project-and-Operations/Kenya_-_Thwake_Multi-Purpose_Water_Development_Program_%E2%80%93_Phase_I_-_Appraisal_Report.pdf",
+   "source_date": "2013-10",
+   "confidence": "high",
+   "notes": "SUPERSEDED (2013 appraisal design, 77 m dam): 34 MCM human consumption + 625 MCM hydropower/downstream irrigation + 22 MCM upstream irrigation."
   }
  ],
  "dems": {

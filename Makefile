@@ -24,8 +24,7 @@ test:  ## Run tests with coverage (incl. agent-guardrail tests)
 check: lint typecheck test  ## Everything CI runs
 
 baseline:  ## Build Phase 1 baseline outputs (needs Earth Engine auth + .env)
-	uv run python -m thwake baseline --step extent
-	uv run python -m thwake baseline --step aev
+	uv run python -m thwake baseline
 
 hooks:  ## Run all pre-commit hooks on every file
 	pre-commit run --all-files

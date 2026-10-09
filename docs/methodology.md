@@ -48,6 +48,11 @@ How the science works, in enough detail to implement and to explain publicly. Th
 - Land cover in the flood zone (ESA WorldCover 10 m; Dynamic World for recent dates) → hectares of cropland, shrub, trees, built-up to be flooded.
 - Cloud-free Sentinel-2 median composite (dry season) as the "before" image.
 - JRC Global Surface Water → historic river channel (so pre-existing river water isn't counted as reservoir).
+- *Implementation (prompt 05, `thwake baseline --step landcover | river | composite`; `src/thwake/reference.py`):* results and known issues are in [baseline-v1.md](baseline-v1.md).
+  - **Pre-filling window:** 2026-06-01 to 2026-10-01 (`dates.pre_filling_window`), the latest long dry season before impoundment. The config check refuses a window that ends after `impoundment_start`.
+  - **Land cover:** hectares per class inside the max extent, pixel centres inside, geodesic pixel area. Sources: ESA WorldCover v200 (2021), and the per-pixel most frequent Dynamic World label over the window. Each class is matched to a common (Dynamic World) class, and the WorldCover–Dynamic World range is the reported uncertainty, with the products' published accuracies. Each product's classes must add up to the max-extent area within 2%. An "expected area" from mean Dynamic World probabilities was tried and dropped: the probabilities are not calibrated (it gave ~119 ha of snow and ice).
+  - **"Before" composite:** Sentinel-2 L2A median over the window, pixels with Cloud Score+ `cs` < 0.6 masked. The extent is the AOI bounding box + 1 km. Exported as a versioned EE asset (B2, B3, B4, B8, B11, B12 as uint16 reflectance ×10⁴, plus a `clear_obs` count, 10 m, UTM 37S) and as a 1,200 px true-colour PNG. The step fails if any pixel has no clear observation. CHIRPS rainfall over the window is recorded as evidence that it was dry.
+  - **River channel:** JRC GSW 1.4 `occurrence` ≥ 10% inside the AOI, vectorised (8-connected) on the native 30 m grid. The Athi here is narrow and seasonal, so occurrence peaks at ~59% and ≥ 50% would keep almost nothing. The areas at 5, 25 and 50% are stored with the output as its sensitivity.
 
 ## 2. Phase 2 — Filling tracker
 

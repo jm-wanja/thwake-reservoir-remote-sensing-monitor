@@ -1,6 +1,7 @@
 # Project settings. Facts come from data/external/official_figures.csv (with sources).
 # Values marked ⚠️ verify are unconfirmed — see docs/open-questions.md.
-# All figures below await human verification (human-steps.md H6).
+# FSL, design capacity and maximum flood level are human-verified (dam.design_figures_verified);
+# the dam axis was human-verified on imagery (open question 1).
 
 dam:
   name: Thwake Dam
@@ -13,17 +14,27 @@ dam:
   design_capacity_mcm: 688
   # ESIA 2025 §2.4. Labelled as crest elevation by another source — open question 16.
   maximum_flood_level_m_asl: 920.5
-  # ⚠️ verify: dam axis DIGITISED (not a published value) on 2026-10-09 (prompt 03) from a
+  # The author checked FSL, capacity, freeboard and maximum flood level against the ESIA
+  # (human-steps.md H6). Recorded in the baseline outputs' FSL provenance.
+  design_figures_verified:
+    date: 2026-10-10
+    source: >-
+      ESIA May 2025 §2.4 "New Design Parameters" (reservoir storage 688 MCM, FSL 912 m a.s.l.,
+      freeboard 8.5 m, maximum flood level 920.5 m) and §2.3 ("the contour line 912 MASl
+      represents this volume")
+  # Dam axis DIGITISED (not a published value) on 2026-10-09 (prompt 03) from a
   # Sentinel-2 L2A median composite (Jun–Sep 2026, Cloud Score+ ≥ 0.6): the visible ends of
   # the embankment crest, read to about ±20 m. Length ≈1.48 km (ESIA: crest 1,500 m).
-  # Midpoint ≈ -1.7893, 37.8451, ~110 m from the prompt 01 estimate. Open question 1.
+  # Midpoint ≈ -1.7893, 37.8451, ~110 m from the prompt 01 estimate. Human-verified on
+  # Google Earth imagery of 25 Jun 2024 (open question 1, resolved 2026-10-09).
   # SW (Makueni) end first, NE (Kitui) end second.
   wall_axis:
     - {lat: -1.79363, lon: 37.84005}
     - {lat: -1.78505, lon: 37.85021}
   wall_axis_source: >-
     Digitised 2026-10-09 (prompt 03) on a Sentinel-2 L2A median composite, Jun–Sep 2026;
-    not a published value. ⚠️ verify (open question 1).
+    not a published value. Human-verified on Google Earth imagery of 25 Jun 2024 (open
+    question 1, resolved).
   # Flood-fill start for the max-extent mask: the Athi–Thwake confluence (OpenStreetMap;
   # see official_figures.csv), ~1 km upstream of the wall and on the pre-dam river bed.
   reservoir_seed: {lat: -1.78099, lon: 37.84029}
@@ -38,6 +49,11 @@ dates:
   # January 2027 (a projection, not an event). Set the actual date + source when it happens.
   # Open question 5.
   impoundment_start: null
+  # Pre-filling reference window (methodology §1.4, prompt 05): the latest long dry season
+  # before impoundment. Jun–Sep is the main dry season around Thwake (Makindu WMO normals:
+  # ≤2 mm/month Jun–Sep); the CHIRPS total for the window is recorded with the composite.
+  # Used for the Sentinel-2 "before" composite and Dynamic World land cover. End exclusive.
+  pre_filling_window: {start: 2026-06-01, end: 2026-10-01}
 
 paths:
   # Relative to the repository root.
@@ -46,6 +62,15 @@ paths:
   aev_curve: data/baseline/aev_curve_v1.csv
   aev_metadata: data/baseline/aev_curve_v1.json   # provenance + checks for the CSV
   aev_figure: media/aev_curve_v1.png
+  # Pre-filling reference layers (prompt 05).
+  landcover: data/baseline/landcover_flood_zone.csv
+  landcover_metadata: data/baseline/landcover_flood_zone.json
+  river_channel: data/baseline/river_channel.geojson
+  before_composite_png: media/before_composite.png
+  before_composite_metadata: data/baseline/before_composite.json  # provenance of the asset + PNG
+  # SHA-256 of every frozen baseline file (the path keys in baseline.FROZEN_PATH_KEYS).
+  # Its presence means the baseline is frozen: `thwake baseline` refuses to overwrite it.
+  baseline_manifest: data/baseline/baseline_v1.sha256
   timeseries: data/processed/thwake_timeseries.csv
   official_figures: data/external/official_figures.csv
 
@@ -53,3 +78,5 @@ earth_engine:
   # The Cloud project ID is read from EE_PROJECT in .env, never stored here.
   # Cloud assets folder for baseline layers (created 2026-10-09, human-steps.md H2).
   assets_folder: projects/thwake-monitor/assets/thwake
+  # Sentinel-2 "before" composite (prompt 05), versioned with the baseline.
+  before_composite_asset: projects/thwake-monitor/assets/thwake/before_composite_s2_v1

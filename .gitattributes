@@ -1,0 +1,4 @@
+# Frozen baseline files are checked byte for byte against data/baseline/baseline_v1.sha256
+# (AGENTS.md rule 8): never convert their line endings on checkout.
+data/baseline/** -text
+media/** -text

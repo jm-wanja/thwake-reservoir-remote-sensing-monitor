@@ -18,6 +18,7 @@ Everything about **what** this project is, **why** it exists, **how** it is buil
 | 12 | [decisions/](decisions/) | Architecture Decision Records (ADRs) — one file per decision |
 | 13 | [agent-workflow.md](agent-workflow.md) | How the project is built with AI agents: slash commands, order, review |
 | 14 | [human-steps.md](human-steps.md) | Steps only the author does: accounts, secrets, commits, publishing, approvals |
+| 15 | [baseline-v1.md](baseline-v1.md) | The Phase 1 baseline: inputs, dataset versions, results vs official figures, known issues, freeze status |
 
 ## Maintenance rules
 

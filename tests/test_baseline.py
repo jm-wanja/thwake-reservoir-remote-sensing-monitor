@@ -223,6 +223,27 @@ def test_fsl_from_official_figures_is_not_fallback() -> None:
     assert prov["fsl_sources"]
 
 
+def test_verified_fsl_records_check(cfg: Config) -> None:
+    verified = b.design_verification(cfg)
+    assert verified is not None and verified["date"] == "2026-10-10"
+    assert "§2.4" in verified["source"] and "\n" not in verified["source"]
+    prov = b.fsl_provenance(912, b.read_official_figures(OFFICIAL), verified)
+    assert prov["fsl_verified"] == "2026-10-10"
+    assert "human-verified on 2026-10-10" in prov["fsl_note"]
+
+
+def test_unverified_fsl_says_awaiting() -> None:
+    prov = b.fsl_provenance(912, b.read_official_figures(OFFICIAL))
+    assert prov["fsl_verified"] is None
+    assert "awaiting human verification" in prov["fsl_note"]
+
+
+@pytest.mark.parametrize("entry", [{"date": "2026-10-10"}, "yes"])
+def test_bad_design_verification_raises(cfg: Config, entry: object) -> None:
+    with pytest.raises(ConfigError, match="design_figures_verified"):
+        b.design_verification(with_changes(cfg, "settings", "dam", design_figures_verified=entry))
+
+
 def test_unsourced_fsl_is_flagged_as_fallback() -> None:
     prov = b.fsl_provenance(900, b.read_official_figures(OFFICIAL))
     assert prov["fsl_is_fallback"] is True
@@ -374,7 +395,7 @@ def fake_aev_result(tmp_path: Path, vs_design_flag: bool = False) -> b.AEVResult
 
 def test_aev_summary_reports_capacity_and_rim(tmp_path: Path) -> None:
     text = b.aev_summary(fake_aev_result(tmp_path))
-    assert "DRAFT, not frozen" in text
+    assert "freeze status in docs/baseline-v1.md" in text
     assert "743.4" in text and "+8.1%" in text and "+15.7%" in text
     assert "within 681–825 MCM" in text
     assert "first overflow ≈913.0 m at -1.79667, 37.82917" in text
