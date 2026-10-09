@@ -11,6 +11,7 @@ dependencies = [
     "earthengine-api==1.7.47",
     "geemap==0.37.2",
     "geopandas==1.2.0",
+    "matplotlib==3.11.2",
     "pandas==3.0.6",
     "python-dotenv==1.2.4",
     "pyyaml==6.0.3",

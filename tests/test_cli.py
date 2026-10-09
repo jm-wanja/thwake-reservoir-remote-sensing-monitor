@@ -61,3 +61,16 @@ def test_baseline_extent_reports_sanity_failure(monkeypatch: pytest.MonkeyPatch)
     result = CliRunner().invoke(cli, ["baseline", "--step", "extent"])
     assert result.exit_code == 1
     assert "leaks past the dam wall" in result.output
+
+
+def test_baseline_aev_runs_step(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = []
+    monkeypatch.setattr(ee_auth, "initialize", lambda cfg: calls.append("init"))
+    monkeypatch.setattr(
+        baseline_steps, "build_aev", lambda cfg, log: calls.append("aev") or "curve"
+    )
+    monkeypatch.setattr(baseline_steps, "aev_summary", lambda result: f"aev summary of {result}")
+    result = CliRunner().invoke(cli, ["baseline", "--step", "aev"])
+    assert result.exit_code == 0, result.output
+    assert calls == ["init", "aev"]
+    assert "aev summary of curve" in result.output

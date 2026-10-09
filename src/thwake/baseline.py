@@ -1,6 +1,6 @@
-"""Phase 1 baseline: area of interest (AOI) and max-extent mask.
+"""Phase 1 baseline: area of interest (AOI), max-extent mask and AEV curve.
 
-Method: docs/methodology.md §1.1–1.2 and ADR 0006.
+Method: docs/methodology.md §1.1–1.3, ADRs 0006 and 0008.
 
 - **Max extent:** Copernicus GLO-30 pixels at or below the full supply level (FSL) that are
   connected to the reservoir seed (Athi–Thwake confluence). The DEM predates the dam, so the
@@ -9,10 +9,14 @@ Method: docs/methodology.md §1.1–1.2 and ADR 0006.
   FSL + margin. Each pass found is closed with a small disk, as the saddle dams do on the
   ground, and recorded in the output metadata. The AOI is the union of that fill and the
   max extent, with islands filled in.
+- **AEV curve:** area and volume below each level from the riverbed to the FSL, inside the
+  max-extent mask, for each DEM in ``baseline.aev_dems`` (Copernicus GLO-30 and SRTM). Both
+  DEMs use the same (GLO-30) mask, so differences reflect valley shape only. Each DEM's own
+  rim is checked separately (wall barrier only) and reported, never used to re-mask.
 
 The pure-Python helpers (geometry, checks, provenance, pass search) are unit-tested. The
 Earth Engine steps need an authenticated session; check them by running
-``thwake baseline --step extent`` and ``notebooks/01_aoi_max_extent.ipynb``.
+``thwake baseline --step extent`` / ``--step aev`` and the notebooks in ``notebooks/``.
 """
 
 from __future__ import annotations
@@ -32,13 +36,22 @@ from shapely.geometry import MultiPolygon, Polygon, mapping, shape
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import orient
 
-from thwake.collections import copernicus_dem
+from thwake import export, volume
+from thwake.collections import (
+    DEM_COLLECTION_KEYS,
+    DEM_LABELS,
+    DEM_VERTICAL_DATUM,
+    copernicus_dem,
+    dem_by_name,
+)
 from thwake.config import REPO_ROOT, Config, ConfigError
 
 LonLat = tuple[float, float]
 GEOD = Geod(ellps="WGS84")
 METHOD_VERSION = "extent-v1"
 METHOD_REF = "docs/methodology.md §1.1–1.2"
+AEV_METHOD_VERSION = "aev-v1"
+AEV_METHOD_REF = "docs/methodology.md §1.3"
 # Output coordinates are rounded to this grid (~0.1 m), far finer than the 30 m DEM.
 COORD_PRECISION_DEG = 1e-6
 # An output this close to the search-area edge (~110 m, 3–4 DEM pixels) counts as touching.
@@ -424,11 +437,21 @@ def write_geojson(path: Path, collection: dict[str, Any]) -> None:
 class EarthEngineFill:
     """Flood fills on the pre-dam DEM, run server side in Earth Engine."""
 
-    def __init__(self, cfg: Config, settings: ExtentSettings, bounds: tuple[float, ...]):
-        """Prepare the DEM, search region, seed and barrier geometry."""
+    def __init__(
+        self,
+        cfg: Config,
+        settings: ExtentSettings,
+        bounds: tuple[float, ...],
+        dem: tuple[ee.Image, ee.ImageCollection] | None = None,
+    ):
+        """Prepare the DEM, search region, seed and barrier geometry.
+
+        ``dem`` defaults to Copernicus GLO-30; pass another ``(image, tiles)`` pair (e.g.
+        SRTM) to run the same fills on it.
+        """
         self.settings = settings
         self.region = ee.Geometry.Rectangle(list(bounds), None, False)
-        self.dem, self.tiles = copernicus_dem(cfg, self.region)
+        self.dem, self.tiles = dem if dem is not None else copernicus_dem(cfg, self.region)
         self.projection = self.dem.projection()
         self.seed = ee.Geometry.Point(list(settings.seed))
         self.probe = ee.Geometry.Point(list(settings.downstream_point))
@@ -448,17 +471,20 @@ class EarthEngineFill:
         ]
         return self._raster(ee.FeatureCollection(features))
 
-    def fill(self, level: float, closures: list[PassClosure]) -> ee.FeatureCollection:
-        """Polygon of DEM pixels ≤ ``level`` connected to the seed, not crossing barriers."""
+    def _components(self, level: float, closures: list[PassClosure]) -> ee.FeatureCollection:
+        """Connected polygons of DEM pixels ≤ ``level``, not crossing barriers."""
         mask = self.dem.lte(level).And(self.barrier(closures).Not()).selfMask()
-        polygons = mask.reduceToVectors(
+        return mask.reduceToVectors(
             geometry=self.region,
             crs=self.projection,
             geometryType="polygon",
             eightConnected=self.settings.eight_connected,
             maxPixels=MAX_PIXELS,
         )
-        return polygons.filterBounds(self.seed)
+
+    def fill(self, level: float, closures: list[PassClosure]) -> ee.FeatureCollection:
+        """Polygon of DEM pixels ≤ ``level`` connected to the seed, not crossing barriers."""
+        return self._components(level, closures).filterBounds(self.seed)
 
     def leaks(self, level: float, closures: list[PassClosure]) -> bool:
         """True if the fill at ``level`` reaches the downstream check point."""
@@ -475,6 +501,29 @@ class EarthEngineFill:
         outside = after.And(inside.Not()).And(self.dem.lte(below))
         rim = self.dem.gt(below).And(self.dem.lte(above)).And(after)
         candidates = rim.And(inside.focalMax(2)).And(outside.focalMax(2)).selfMask()
+        points = candidates.reduceToVectors(
+            geometry=self.region,
+            crs=self.projection,
+            geometryType="centroid",
+            eightConnected=True,
+            maxPixels=MAX_PIXELS,
+        )
+        return [
+            (float(f["geometry"]["coordinates"][0]), float(f["geometry"]["coordinates"][1]))
+            for f in _get_info(points)["features"]
+        ]
+
+    def locate_leak(self, below: float, above: float) -> list[LonLat]:
+        """Centroids of rim pixels joining the reservoir to the downstream basin.
+
+        Like :meth:`locate_pass` (no closures), but the outside ground must be the polygon
+        ≤ ``below`` that contains the downstream check point. Internal pockets that merge
+        with the fill at the same level are therefore not reported.
+        """
+        inside = self._raster(self.fill(below, []))
+        downstream = self._raster(self._components(below, []).filterBounds(self.probe))
+        rim = self.dem.gt(below).And(self.dem.lte(above))
+        candidates = rim.And(inside.focalMax(2)).And(downstream.focalMax(2)).selfMask()
         points = candidates.reduceToVectors(
             geometry=self.region,
             crs=self.projection,
@@ -676,4 +725,488 @@ def summary(result: ExtentResult) -> str:
         "each end)"
     )
     lines.append(f"FSL {m['full_supply_level_m_asl']:g} m: {m['fsl_note']}")
+    return "\n".join(lines)
+
+
+# --- AEV curve: settings and pure helpers -----------------------------------------------
+
+
+@dataclass(frozen=True)
+class AEVSettings:
+    """Inputs for the AEV-curve step, read from ``config/*.yaml``."""
+
+    fsl_m: float
+    step_m: float
+    dems: tuple[str, ...]
+    dem_collections: dict[str, str]
+    design_capacity_mcm: float
+    capacity_check_pct: float
+    wall_zone_m: float
+    aev_path: Path
+    metadata_path: Path
+    figure_path: Path
+
+
+def aev_settings(cfg: Config) -> AEVSettings:
+    """Read and validate the AEV-curve inputs from the loaded configuration.
+
+    Raises:
+        ConfigError: If a value is missing or malformed, or a DEM name is unknown.
+    """
+    dam = cfg.settings.get("dam") or {}
+    paths = cfg.settings.get("paths") or {}
+    base = cfg.thresholds.get("baseline") or {}
+    where_dam, where_base, where_paths = (
+        "settings.yaml dam",
+        "thresholds.yaml baseline",
+        "settings.yaml paths",
+    )
+    dems = _require(base, "aev_dems", where_base)
+    if not isinstance(dems, list) or not dems:
+        raise ConfigError(f"'aev_dems' in {where_base} must be a non-empty list")
+    unknown = [d for d in dems if d not in DEM_COLLECTION_KEYS]
+    if unknown or len(set(dems)) != len(dems):
+        raise ConfigError(
+            f"'aev_dems' in {where_base} must list distinct names from "
+            f"{sorted(DEM_COLLECTION_KEYS)}, got {dems}"
+        )
+    collections = {
+        d: str(_require(cfg.ee_collections, DEM_COLLECTION_KEYS[d], "ee_collections")) for d in dems
+    }
+    return AEVSettings(
+        fsl_m=_number(dam, "full_supply_level_m_asl", where_dam),
+        step_m=_number(base, "aev_level_step_m", where_base),
+        dems=tuple(dems),
+        dem_collections=collections,
+        design_capacity_mcm=_number(dam, "design_capacity_mcm", where_dam),
+        capacity_check_pct=_number(base, "aev_capacity_check_pct", where_base),
+        wall_zone_m=_number(base, "aev_wall_zone_m", where_base),
+        aev_path=REPO_ROOT / _require(paths, "aev_curve", where_paths),
+        metadata_path=REPO_ROOT / _require(paths, "aev_metadata", where_paths),
+        figure_path=REPO_ROOT / _require(paths, "aev_figure", where_paths),
+    )
+
+
+def capacity_history(rows: list[dict[str, str]]) -> list[float]:
+    """Distinct ``storage_capacity_at_fsl`` values in the official figures, ascending.
+
+    These are the design capacities at the same FSL across design stages (open question 15).
+    """
+    values = {
+        v
+        for r in rows
+        if r["item"] == "storage_capacity_at_fsl" and (v := _as_float(r["value"])) is not None
+    }
+    return sorted(values)
+
+
+def capacity_comparison(
+    volume_mcm: float, design_mcm: float, history_mcm: Sequence[float], check_pct: float
+) -> dict[str, Any]:
+    """Compare a volume at FSL with the design capacity and the design-history range.
+
+    Args:
+        volume_mcm: DEM volume at FSL.
+        design_mcm: Current design capacity (config ``dam.design_capacity_mcm``).
+        history_mcm: All design capacities at the same FSL (includes the current one).
+        check_pct: Differences from the design capacity beyond this need investigation.
+
+    Returns:
+        Rounded figures and flags for the metadata and the terminal summary.
+    """
+    low, high = min(history_mcm), max(history_mcm)
+    vs_design = volume.percent_difference(volume_mcm, design_mcm)
+    return {
+        "volume_at_fsl_mcm": round(volume_mcm, 1),
+        "design_capacity_mcm": design_mcm,
+        "vs_design_pct": round(vs_design, 1),
+        "design_history_mcm": [low, high],
+        "vs_history_low_pct": round(volume.percent_difference(volume_mcm, low), 1),
+        "vs_history_high_pct": round(volume.percent_difference(volume_mcm, high), 1),
+        "within_design_history": low <= volume_mcm <= high,
+        "needs_investigation": abs(vs_design) > check_pct,
+    }
+
+
+def rim_overflow(
+    leaks: Callable[[float], bool], lo: float, hi: float, tol: float
+) -> tuple[float, float] | None:
+    """Bracket the level at which the fill first overflows the rim, searching ``[lo, hi]``.
+
+    Args:
+        leaks: ``leaks(level)`` is true if the fill at ``level`` reaches downstream.
+        lo: Lowest level searched.
+        hi: Highest level searched.
+        tol: Precision of the overflow level, in metres.
+
+    Returns:
+        ``(below, above)`` around the overflow level, ``(lo, lo)`` if the fill already
+        leaks at ``lo``, or ``None`` if it does not leak at ``hi``.
+    """
+    if leaks(lo):
+        return lo, lo
+    if not leaks(hi):
+        return None
+    return bisect_level(leaks, lo, hi, tol)
+
+
+# --- AEV curve: Earth Engine ------------------------------------------------------------
+
+
+class EarthEngineAEV:
+    """Per-bin pixel sums of one DEM inside the max-extent mask, computed in Earth Engine."""
+
+    def __init__(self, cfg: Config, name: str, mask: BaseGeometry):
+        """Load the DEM and rasterise the mask on its native grid (pixel centres inside)."""
+        self.name = name
+        geometry = ee.Geometry(json.loads(shapely.to_geojson(mask)), None, False)
+        self.region = geometry.bounds(None, None).buffer(200, None, None)
+        self.dem, self.tiles = dem_by_name(cfg, name, self.region)
+        self.projection = self.dem.projection()
+        self.mask = (
+            ee.Image(0)
+            .byte()
+            .paint(ee.FeatureCollection([ee.Feature(geometry)]), 1)
+            .reproject(self.projection)
+        )
+
+    def _reduce(self, image: ee.Image, reducer: ee.Reducer) -> ee.Dictionary:
+        return image.updateMask(self.mask).reduceRegion(
+            reducer=reducer, geometry=self.region, crs=self.projection, maxPixels=MAX_PIXELS
+        )
+
+    def bins_and_stats(self, top_m: float, step_m: float) -> tuple[list[volume.BinSum], dict]:
+        """``(bin sums, stats)``: the inputs of :func:`thwake.volume.curve_from_bins`.
+
+        Bins follow :func:`thwake.volume.bin_index`. Stats: mask area on this DEM's grid,
+        minimum and maximum elevation in the mask, and the DEM's grid transform.
+        """
+        area = ee.Image.pixelArea().toDouble()
+        depth = ee.Image.constant(top_m).toDouble().subtract(self.dem.toDouble())
+        stack = ee.Image.cat(area, area.multiply(depth), depth.divide(step_m).floor().int())
+        grouped = ee.Reducer.sum().unweighted().repeat(2).group(groupField=2, groupName="bin")
+        info = _get_info(
+            ee.Dictionary(
+                {
+                    "bins": self._reduce(stack, grouped).get("groups"),
+                    "mask_m2": self._reduce(area, ee.Reducer.sum().unweighted()).get("area"),
+                    "elev": self._reduce(self.dem, ee.Reducer.minMax()),
+                    "transform": self.projection.transform(),
+                }
+            )
+        )
+        bins = [(int(g["bin"]), float(g["sum"][0]), float(g["sum"][1])) for g in info["bins"]]
+        stats = {
+            "mask_area_km2": info["mask_m2"] / volume.M2_PER_KM2,
+            "min_elevation_m": info["elev"]["DEM_min"],
+            "max_elevation_m": info["elev"]["DEM_max"],
+            "grid_transform": info["transform"],
+        }
+        return bins, stats
+
+    def difference_stats(self, other: EarthEngineAEV, zone: ee.Geometry | None) -> dict:
+        """Statistics of ``other − self`` elevation (m) inside the mask (and ``zone``)."""
+        diff = other.dem.subtract(self.dem).rename("diff")
+        if zone is not None:
+            diff = diff.clip(zone)
+        reducer = (
+            ee.Reducer.mean()
+            .combine(ee.Reducer.stdDev(), None, True)
+            .combine(ee.Reducer.percentile([5, 50, 95]), None, True)
+            .combine(ee.Reducer.count(), None, True)
+        )
+        info = _get_info(self._reduce(diff, reducer))
+        return {
+            "pixels": info["diff_count"],
+            "mean_m": round(info["diff_mean"], 2),
+            "std_m": round(info["diff_stdDev"], 2),
+            "p5_m": round(info["diff_p5"], 2),
+            "median_m": round(info["diff_p50"], 2),
+            "p95_m": round(info["diff_p95"], 2),
+        }
+
+    def acquisition_window(self) -> str:
+        """``start/end`` dates of the DEM data used (ISO 8601 interval)."""
+        start = ee.Date(self.tiles.aggregate_min("system:time_start")).format("YYYY-MM-dd")
+        end = ee.Date(self.tiles.aggregate_max("system:time_end")).format("YYYY-MM-dd")
+        return "/".join(_get_info(ee.List([start, end])))
+
+
+def rim_check(
+    cfg: Config,
+    extent: ExtentSettings,
+    aev: EarthEngineAEV,
+    mask: BaseGeometry,
+    log: Callable[[str], None],
+) -> dict[str, Any]:
+    """Flood-fill one DEM with the wall barrier only and report how its rim behaves.
+
+    Nothing here changes the mask: it reports (a) the level at which this DEM's basin first
+    overflows (searched within FSL ± the AOI margin) and the rim pixels joining it to the
+    downstream basin there, and (b) if it holds at FSL, how its own fill at FSL differs from
+    the max-extent mask.
+    """
+    s = extent
+    bounds = search_bounds(midpoint(s.wall_axis[0], s.wall_axis[-1]), s.search_radius_km)
+    engine = EarthEngineFill(cfg, s, bounds, dem=(aev.dem, aev.tiles))
+    lo, hi = s.fsl_m - s.aoi_margin_m, s.fsl_m + s.aoi_margin_m
+    log(f"  {DEM_LABELS[aev.name]}: searching for the first rim overflow in {lo:g}–{hi:g} m ...")
+    bracket = rim_overflow(lambda level: engine.leaks(level, []), lo, hi, s.pass_level_tolerance_m)
+    report: dict[str, Any] = {"searched_m_asl": [lo, hi], "barrier": "dam wall only"}
+    if bracket is None:
+        report |= {"first_overflow_m_asl": None, "leaks_at_fsl": False}
+    elif bracket[0] == bracket[1]:
+        report |= {"first_overflow_m_asl": f"< {lo:g}", "leaks_at_fsl": True}
+    else:
+        below, above = bracket
+        passes = engine.locate_leak(below, above)
+        report |= {
+            "first_overflow_m_asl": round(above, 1),
+            "leaks_at_fsl": above <= s.fsl_m,
+            "rim_margin_above_fsl_m": round(above - s.fsl_m, 1),
+            "overflow_passes": [{"lat": round(y, 5), "lon": round(x, 5)} for x, y in passes],
+        }
+    if not report["leaks_at_fsl"]:
+        own = engine.geometry(engine.fill(s.fsl_m, []), f"{aev.name} fill at FSL")
+        report |= {
+            "own_fill_at_fsl_km2": round(area_km2(own), 2),
+            "own_fill_outside_mask_km2": round(area_km2(shapely.difference(own, mask)), 2),
+            "mask_outside_own_fill_km2": round(area_km2(shapely.difference(mask, own)), 2),
+        }
+    return report
+
+
+# --- AEV curve: step --------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class AEVResult:
+    """Outputs of the AEV-curve step."""
+
+    curves: dict[str, volume.AEVCurve]
+    metadata: dict[str, Any]
+    aev_path: Path
+    metadata_path: Path
+    figure_path: Path
+
+
+def build_aev(cfg: Config, write: bool = True, log: Callable[[str], None] = print) -> AEVResult:
+    """Build the AEV curve for each configured DEM and (by default) write CSV, JSON and figure.
+
+    Earth Engine must already be initialised. The max extent must exist (``--step extent``).
+
+    Args:
+        cfg: Loaded configuration.
+        write: Write ``aev_curve_v1.csv``, its ``.json`` metadata and the PNG figure.
+        log: Progress messages go here.
+
+    Returns:
+        The curves, metadata and output paths.
+
+    Raises:
+        BaselineError: If the max extent is missing or a curve cannot be built.
+    """
+    s = aev_settings(cfg)
+    extent = extent_settings(cfg)
+    if not extent.max_extent_path.is_file():
+        raise BaselineError(
+            f"{extent.max_extent_path.relative_to(REPO_ROOT)} not found: "
+            "run `thwake baseline --step extent` first"
+        )
+    max_extent = json.loads(extent.max_extent_path.read_text(encoding="utf-8"))
+    mask_feature = max_extent["features"][0]
+    mask = polygonal(shape(mask_feature["geometry"]))
+    mask_props = mask_feature["properties"]
+    if mask_props.get("level_m_asl") != s.fsl_m:
+        raise BaselineError(
+            f"The max extent was built at {mask_props.get('level_m_asl')} m but the FSL is "
+            f"{s.fsl_m:g} m: rebuild it with `thwake baseline --step extent`"
+        )
+    rows = read_official_figures(extent.official_figures_path)
+    history = capacity_history(rows)
+    if s.design_capacity_mcm not in history:
+        history = sorted({*history, s.design_capacity_mcm})
+
+    curves: dict[str, volume.AEVCurve] = {}
+    engines: dict[str, EarthEngineAEV] = {}
+    dem_meta: dict[str, Any] = {}
+    for name in s.dems:
+        log(f"AEV: {DEM_LABELS[name]} levels up to FSL {s.fsl_m:g} m every {s.step_m:g} m ...")
+        engine = EarthEngineAEV(cfg, name, mask)
+        bins, stats = engine.bins_and_stats(s.fsl_m, s.step_m)
+        try:
+            curve = volume.curve_from_bins(bins, s.fsl_m, s.step_m, name)
+        except ValueError as exc:
+            raise BaselineError(f"{DEM_LABELS[name]}: {exc}") from exc
+        above_fsl_m2 = sum(a for k, a, _ in bins if k < 0)
+        dh = curve.levels_m[-1] - curve.levels_m[-2]
+        curves[name], engines[name] = curve, engine
+        dem_meta[name] = {
+            "label": DEM_LABELS[name],
+            "collection": s.dem_collections[name],
+            "acquired": engine.acquisition_window(),
+            "vertical_datum": DEM_VERTICAL_DATUM[name],
+            "grid_transform": stats["grid_transform"],
+            "mask_area_on_grid_km2": round(stats["mask_area_km2"], 3),
+            "mask_area_above_fsl_km2": round(above_fsl_m2 / volume.M2_PER_KM2, 3),
+            "min_elevation_in_mask_m": round(stats["min_elevation_m"], 1),
+            "max_elevation_in_mask_m": round(stats["max_elevation_m"], 1),
+            "curve_start_m_asl": curve.levels_m[0],
+            "area_at_fsl_km2": round(curve.top_area_km2, 2),
+            "volume_at_fsl_mcm": round(curve.top_volume_mcm, 1),
+            # Sensitivity: MCM per metre of level (≈ area at FSL); also the effect of a
+            # uniform 1 m DEM bias or FSL error on the volume at FSL.
+            "dvolume_dlevel_at_fsl_mcm_per_m": round(
+                (curve.volumes_mcm[-1] - curve.volumes_mcm[-2]) / dh, 1
+            ),
+            "capacity_check": capacity_comparison(
+                curve.top_volume_mcm, s.design_capacity_mcm, history, s.capacity_check_pct
+            ),
+        }
+
+    log("Rim check: each DEM flood-filled with the wall barrier only (no re-masking) ...")
+    for name in s.dems:
+        dem_meta[name]["rim"] = rim_check(cfg, extent, engines[name], mask, log)
+
+    comparison: dict[str, Any] = {}
+    if len(s.dems) > 1:
+        primary, secondary = engines[s.dems[0]], engines[s.dems[1]]
+        log(f"DEM difference: {DEM_LABELS[secondary.name]} − {DEM_LABELS[primary.name]} ...")
+        wall = ee.Geometry.LineString([list(p) for p in extent.wall_axis])
+        comparison = {
+            "difference": f"{secondary.name} minus {primary.name} (m), inside the mask",
+            "whole_mask": primary.difference_stats(secondary, None),
+            f"within_{s.wall_zone_m:g}m_of_wall": primary.difference_stats(
+                secondary, wall.buffer(s.wall_zone_m)
+            ),
+        }
+
+    metadata = {
+        "name": "Thwake reservoir area–elevation–volume curve v1",
+        "status": "DRAFT — not frozen. The baseline freeze is prompt 05 (AGENTS.md rule 8).",
+        "csv": str(s.aev_path.relative_to(REPO_ROOT)),
+        "columns": {
+            "level_m_asl": "water level, m above sea level (each DEM's own vertical datum)",
+            "area_km2": "water area at or below the level inside the max-extent mask, km²",
+            "volume_mcm": "stored volume below the level, million m³",
+            "dem_source": "DEM short name (key of 'dems' below)",
+        },
+        "full_supply_level_m_asl": s.fsl_m,
+        **fsl_provenance(s.fsl_m, rows),
+        "level_step_m": s.step_m,
+        "max_extent": {
+            "path": str(extent.max_extent_path.relative_to(REPO_ROOT)),
+            "area_km2": mask_props.get("area_km2"),
+            "official_area_km2": mask_props.get("official_area_km2"),
+            "dem": mask_props.get("dem"),
+            "method_version": mask_props.get("method_version"),
+            "note": "The same GLO-30 mask is used for every DEM, so curve differences "
+            "reflect valley shape only. Pixels are in the mask if their centre is inside it.",
+        },
+        "design_capacity_sources": [
+            {k: r[k] for k in ("value", "source_url", "source_date", "confidence", "notes")}
+            for r in rows
+            if r["item"] == "storage_capacity_at_fsl"
+        ],
+        "dems": dem_meta,
+        "dem_comparison": comparison,
+        "method": AEV_METHOD_REF,
+        "method_version": AEV_METHOD_VERSION,
+        "generated": datetime.now(UTC).date().isoformat(),
+    }
+    result = AEVResult(curves, metadata, s.aev_path, s.metadata_path, s.figure_path)
+    if write:
+        volume.write_aev_csv(s.aev_path, [curves[d] for d in s.dems])
+        s.metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
+        )
+        export.plot_aev_curve(curves, metadata, s.figure_path)
+    return result
+
+
+def _display_path(path: Path) -> str:
+    return str(path.relative_to(REPO_ROOT)) if path.is_relative_to(REPO_ROOT) else str(path)
+
+
+def aev_summary(result: AEVResult) -> str:
+    """Plain-text report of the AEV step for the terminal."""
+    meta, dems = result.metadata, result.metadata["dems"]
+    names = list(dems)
+    width = 24
+
+    def row(label: str, values: list[str]) -> str:
+        return f"  {label:<34}" + "".join(f"{v:>{width}}" for v in values)
+
+    def pct(x: float) -> str:
+        return f"{x:+.1f}%"
+
+    checks = [dems[n]["capacity_check"] for n in names]
+    low, high = checks[0]["design_history_mcm"]
+    design = checks[0]["design_capacity_mcm"]
+    lines = []
+    if meta["fsl_is_fallback"]:
+        lines += ["!" * 72, "WARNING: " + meta["fsl_note"], "!" * 72]
+    lines += [
+        f"AEV curve v1 (DRAFT, not frozen) -> {_display_path(result.aev_path)}",
+        f"  metadata -> {_display_path(result.metadata_path)}; "
+        f"figure -> {_display_path(result.figure_path)}",
+        f"  FSL {meta['full_supply_level_m_asl']:g} m a.s.l., step {meta['level_step_m']:g} m; "
+        f"same max-extent mask for all DEMs ({meta['max_extent']['area_km2']} km², GLO-30)",
+        row("", [dems[n]["label"] for n in names]),
+        row("DEM acquired", [dems[n]["acquired"] for n in names]),
+        row(
+            "Lowest elevation in mask (m)",
+            [f"{dems[n]['min_elevation_in_mask_m']:.1f}" for n in names],
+        ),
+        row(
+            "Mask area above FSL in DEM (km²)",
+            [f"{dems[n]['mask_area_above_fsl_km2']:.2f}" for n in names],
+        ),
+        row("Area at FSL (km²)", [f"{dems[n]['area_at_fsl_km2']:.2f}" for n in names]),
+        row("Volume at FSL (MCM)", [f"{c['volume_at_fsl_mcm']:.1f}" for c in checks]),
+        row(f"  vs design capacity {design:g} MCM", [pct(c["vs_design_pct"]) for c in checks]),
+        row(f"  vs design history low {low:g}", [pct(c["vs_history_low_pct"]) for c in checks]),
+        row(f"  vs design history high {high:g}", [pct(c["vs_history_high_pct"]) for c in checks]),
+        row(
+            f"  within {low:g}–{high:g} MCM",
+            ["yes" if c["within_design_history"] else "NO" for c in checks],
+        ),
+        row(
+            "dV/dh at FSL (MCM per m)",
+            [f"{dems[n]['dvolume_dlevel_at_fsl_mcm_per_m']:.1f}" for n in names],
+        ),
+    ]
+    for n in names:
+        if dems[n]["capacity_check"]["needs_investigation"]:
+            lines.append(
+                f"  WARNING: {dems[n]['label']} volume at FSL is more than the configured "
+                "threshold away from the design capacity: investigate FSL, mask and DEM "
+                "artefacts near the wall (do not tune the curve)."
+            )
+    lines.append("Rim check (wall barrier only; reported, not used to re-mask):")
+    for n in names:
+        rim = dems[n]["rim"]
+        first = rim["first_overflow_m_asl"]
+        if first is None:
+            text = f"no overflow up to {rim['searched_m_asl'][1]:g} m"
+        else:
+            text = f"first overflow ≈{first} m" + (" — LEAKS AT FSL" if rim["leaks_at_fsl"] else "")
+            if rim.get("overflow_passes"):
+                p = rim["overflow_passes"][0]
+                text += f" at {p['lat']:.5f}, {p['lon']:.5f}"
+        lines.append(f"  {dems[n]['label']}: {text}")
+        if "own_fill_at_fsl_km2" in rim:
+            lines.append(
+                f"    own fill at FSL {rim['own_fill_at_fsl_km2']:.2f} km² "
+                f"(outside mask {rim['own_fill_outside_mask_km2']:.2f} km², "
+                f"mask not reached {rim['mask_outside_own_fill_km2']:.2f} km²)"
+            )
+    comparison = meta.get("dem_comparison") or {}
+    for key, stats in comparison.items():
+        if isinstance(stats, dict):
+            lines.append(
+                f"DEM difference ({comparison['difference']}), {key.replace('_', ' ')}: "
+                f"mean {stats['mean_m']:+.2f} m, median {stats['median_m']:+.2f} m, "
+                f"5–95% {stats['p5_m']:+.1f} to {stats['p95_m']:+.1f} m ({stats['pixels']} px)"
+            )
     return "\n".join(lines)

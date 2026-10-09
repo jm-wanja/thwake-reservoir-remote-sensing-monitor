@@ -4,6 +4,11 @@
 
 baseline:
   aev_level_step_m: 0.5            # methodology §1.3
+  # AEV curve (methodology §1.3), set in prompt 04.
+  aev_dems: [copernicus_glo30, srtm]  # primary first; both use the same GLO-30 max-extent mask
+  aev_capacity_check_pct: 20       # warn if volume at FSL differs from design capacity by more
+  aev_wall_zone_m: 500             # DEM-difference statistics also reported within this distance
+                                   # of the wall axis (checks for artefacts near the dam site)
   aoi_buffer_above_fsl_m: 5        # methodology §1.1 ("e.g. +5 m")
   # Max extent and AOI (methodology §1.1–1.2), set in prompt 03.
   search_radius_km: 20             # half-width of the square searched around the wall; the

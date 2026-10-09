@@ -70,18 +70,18 @@ Modules (one responsibility each):
 | Module | Responsibility |
 |--------|----------------|
 | `config` | Load YAML config (AOI, dates, thresholds, EE collection IDs, capacity). |
-| `baseline` | Phase 1: AOI and max-extent mask (wall barrier, flood fill, rim pass closures); later the AEV curve. |
+| `baseline` | Phase 1: AOI and max-extent mask (wall barrier, flood fill, rim pass closures); AEV curve per DEM and rim check (Earth Engine side). |
 | `ee_auth` | Authenticate (user creds locally, service account in CI). |
 | `collections` | Fetch & filter S1, S2, CHIRPS, ERA5 for AOI/date range; S2 cloud masking. |
 | `water_s2` | MNDWI/NDWI → Otsu threshold → water mask. |
 | `water_s1` | Speckle filter → VV backscatter → Otsu / dB threshold → water mask. |
 | `postprocess` | Clip to max-extent, keep component connected to dam, remove specks, gap-fill cloud-obscured edges (optional, see methodology). |
 | `area` | Pixel area sum → km², with edge-pixel sensitivity range. |
-| `volume` | Area → level & volume via AEV curve interpolation; uncertainty propagation. |
+| `volume` | AEV curve: build from per-bin sums, read/write CSV; area → level & volume interpolation; (Phase 2) uncertainty propagation. |
 | `quality` | (Phase 3) turbidity & chlorophyll-proxy indices over water pixels; stats per zone (inflow arm vs dam). |
 | `climate` | Catchment rainfall (CHIRPS), evaporation (ERA5-Land) aggregates. |
 | `regional` | (Phase 4) land-cover change, downstream NDVI dry-season irrigation signal. |
-| `export` | Write CSV/GeoJSON/media; append to canonical time series idempotently. |
+| `export` | Write CSV/GeoJSON/media (AEV figure so far); append to canonical time series idempotently. |
 | `qa` | Sanity checks: S1 vs S2 agreement, impossible jumps, area > max-extent, etc. |
 
 Entry points (CLI, e.g. `python -m thwake <command>`): `baseline`, `update --since <date>`, `media`, `qa`.

@@ -15,7 +15,7 @@ Ongoing project. Phases are sequential in priority but Phase 1 is the most time-
 
 ## Phase 1 — Baseline (now, before/at start of filling)
 - [x] AOI + max-extent mask (prompt 03, 2026-10-09): max extent 30.36 km² vs official ~29 km²; awaiting human review
-- [ ] AEV curve from Copernicus DEM, cross-checked with SRTM; sanity-checked vs official capacity
+- [x] AEV curve from Copernicus DEM, cross-checked with SRTM; sanity-checked vs official capacity (prompt 04, 2026-10-09, **draft, not frozen**): volume at FSL 743 MCM (GLO-30, +8%) and 796 MCM (SRTM, +16%) vs design 688 MCM, both inside the 681–825 design-history range; SRTM rim overflows at ≈910 m (below FSL). Awaiting human review
 - [ ] Pre-filling land cover of flood zone; "before" composite; historic river channel
 - [ ] Freeze baseline v1 (tag release `baseline-v1`)
 - **Exit:** baseline files committed + method written up

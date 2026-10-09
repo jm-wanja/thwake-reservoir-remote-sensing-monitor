@@ -253,3 +253,145 @@ def test_feature_collection_round_trip(tmp_path: Path) -> None:
 def test_pass_closure_as_dict() -> None:
     c = b.PassClosure(37.829171234, -1.796671234, 912.9876)
     assert c.as_dict() == {"lat": -1.79667, "lon": 37.82917, "overflow_level_m_asl": 913.0}
+
+
+# --- AEV curve --------------------------------------------------------------------------
+
+
+def test_repository_aev_settings(cfg: Config) -> None:
+    s = b.aev_settings(cfg)
+    assert s.fsl_m == 912 and s.step_m == 0.5
+    assert s.dems == ("copernicus_glo30", "srtm")
+    assert s.dem_collections == {
+        "copernicus_glo30": "COPERNICUS/DEM/GLO30_2024_1",
+        "srtm": "USGS/SRTMGL1_003",
+    }
+    assert s.design_capacity_mcm == 688
+    assert s.aev_path == REPO_ROOT / "data" / "baseline" / "aev_curve_v1.csv"
+    assert s.figure_path == REPO_ROOT / "media" / "aev_curve_v1.png"
+
+
+@pytest.mark.parametrize("dems", [[], ["copernicus_glo30", "copernicus_glo30"], ["aster"], "srtm"])
+def test_bad_aev_dems_raise(cfg: Config, dems: object) -> None:
+    with pytest.raises(ConfigError, match="aev_dems"):
+        b.aev_settings(with_changes(cfg, "thresholds", "baseline", aev_dems=dems))
+
+
+def test_capacity_history_from_official_figures() -> None:
+    assert b.capacity_history(b.read_official_figures(OFFICIAL)) == [681, 688, 825]
+
+
+def test_capacity_comparison() -> None:
+    c = b.capacity_comparison(743.4, 688, [681, 688, 825], 20)
+    assert c["vs_design_pct"] == 8.1
+    assert c["vs_history_low_pct"] == 9.2
+    assert c["vs_history_high_pct"] == -9.9
+    assert c["design_history_mcm"] == [681, 825]
+    assert c["within_design_history"] is True
+    assert c["needs_investigation"] is False
+    far = b.capacity_comparison(900, 688, [681, 688, 825], 20)
+    assert far["within_design_history"] is False and far["needs_investigation"] is True
+
+
+def test_rim_overflow_brackets_level() -> None:
+    below, above = b.rim_overflow(lambda h: h >= 913.04, 907, 917, 0.1)  # type: ignore[misc]
+    assert below < 913.04 <= above and above - below <= 0.1
+
+
+def test_rim_overflow_closed_and_already_leaking() -> None:
+    assert b.rim_overflow(lambda h: False, 907, 917, 0.1) is None
+    assert b.rim_overflow(lambda h: True, 907, 917, 0.1) == (907, 907)
+
+
+def fake_aev_result(tmp_path: Path, vs_design_flag: bool = False) -> b.AEVResult:
+    from thwake import volume
+
+    def dem(label: str, vol: float, rim: dict) -> dict:
+        return {
+            "label": label,
+            "acquired": "2010-12-15/2014-05-24",
+            "min_elevation_in_mask_m": 836.5,
+            "mask_area_above_fsl_km2": 0.0,
+            "area_at_fsl_km2": 30.36,
+            "dvolume_dlevel_at_fsl_mcm_per_m": 30.1,
+            "capacity_check": b.capacity_comparison(vol, 688, [681, 688, 825], 20),
+            "rim": rim,
+        }
+
+    curve = volume.AEVCurve((836.0, 912.0), (0.0, 30.36), (0.0, 743.4), "copernicus_glo30")
+    meta = {
+        "fsl_is_fallback": False,
+        "fsl_note": "ok",
+        "full_supply_level_m_asl": 912.0,
+        "level_step_m": 0.5,
+        "method_version": "aev-v1",
+        "max_extent": {"area_km2": 30.36, "official_area_km2": 29.0},
+        "dems": {
+            "copernicus_glo30": dem(
+                "Copernicus GLO-30",
+                743.4,
+                {
+                    "searched_m_asl": [907, 917],
+                    "first_overflow_m_asl": 913.0,
+                    "leaks_at_fsl": False,
+                    "overflow_passes": [{"lat": -1.79667, "lon": 37.82917}],
+                    "own_fill_at_fsl_km2": 30.36,
+                    "own_fill_outside_mask_km2": 0.0,
+                    "mask_outside_own_fill_km2": 0.0,
+                },
+            ),
+            "srtm": dem(
+                "SRTM",
+                950.0 if vs_design_flag else 795.8,
+                {
+                    "searched_m_asl": [907, 917],
+                    "first_overflow_m_asl": "< 907",
+                    "leaks_at_fsl": True,
+                },
+            ),
+        },
+        "dem_comparison": {
+            "difference": "srtm minus copernicus_glo30 (m), inside the mask",
+            "whole_mask": {
+                "pixels": 32000,
+                "mean_m": -1.7,
+                "std_m": 3.0,
+                "p5_m": -6.0,
+                "median_m": -1.5,
+                "p95_m": 2.0,
+            },
+        },
+    }
+    srtm = volume.AEVCurve((827.5, 912.0), (0.0, 30.04), (0.0, 795.8), "srtm")
+    return b.AEVResult(
+        {"copernicus_glo30": curve, "srtm": srtm},
+        meta,
+        REPO_ROOT / "data" / "baseline" / "aev_curve_v1.csv",
+        REPO_ROOT / "data" / "baseline" / "aev_curve_v1.json",
+        tmp_path / "aev.png",
+    )
+
+
+def test_aev_summary_reports_capacity_and_rim(tmp_path: Path) -> None:
+    text = b.aev_summary(fake_aev_result(tmp_path))
+    assert "DRAFT, not frozen" in text
+    assert "743.4" in text and "+8.1%" in text and "+15.7%" in text
+    assert "within 681–825 MCM" in text
+    assert "first overflow ≈913.0 m at -1.79667, 37.82917" in text
+    assert "SRTM: first overflow ≈< 907 m — LEAKS AT FSL" in text
+    assert "mean -1.70 m" in text
+    assert "WARNING" not in text
+
+
+def test_aev_summary_warns_when_far_from_design(tmp_path: Path) -> None:
+    text = b.aev_summary(fake_aev_result(tmp_path, vs_design_flag=True))
+    assert "WARNING: SRTM volume at FSL" in text
+    assert "do not tune the curve" in text
+
+
+def test_plot_aev_curve_writes_png(tmp_path: Path) -> None:
+    from thwake.export import plot_aev_curve
+
+    result = fake_aev_result(tmp_path)
+    plot_aev_curve(result.curves, result.metadata, result.figure_path)
+    assert result.figure_path.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
