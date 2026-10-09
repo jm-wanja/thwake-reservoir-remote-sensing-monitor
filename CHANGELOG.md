@@ -5,6 +5,7 @@ All notable changes to this project are recorded here. Format: [Keep a Changelog
 ## [Unreleased]
 
 ### Added
+- AfDB Appraisal Report (2013) and IPR (Jun 2024) as sources [S13], [S14]: design history (681 MCM, 77 m), Jun 2024 progress (92%), missed completion dates, land acquired (~37.3 km², a cross-check for the flood-zone area). ESIA saddle-dam context (new 2025 scope for the 920.5 m flood level). 11 new rows in `data/external/official_figures.csv`.
 - Phase 1 AEV curve (`thwake baseline --step aev`, draft, not frozen): area and volume every 0.5 m from the riverbed to FSL 912 m, for Copernicus GLO-30 and SRTM inside the same max-extent mask, computed in Earth Engine. Outputs: `data/baseline/aev_curve_v1.csv`, `aev_curve_v1.json` (provenance, capacity check, rim check, DEM difference), `media/aev_curve_v1.png`, `notebooks/02_aev_curve.ipynb`. Volume at FSL: 743.4 MCM (GLO-30, +8.1% vs the 688 MCM design) and 795.8 MCM (SRTM, +15.7%); both inside the 681–825 MCM design-history range. SRTM's basin overflows at ≈910 m via rim pass (a). This is reported, not re-masked.
 - `thwake.volume`: AEV curve type with area→level, level→volume and area→volume interpolation, plus CSV read/write. Tested on a synthetic cone and V-trough.
 - `matplotlib` as an explicit dependency (was already installed via geemap).
