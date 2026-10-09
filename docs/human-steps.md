@@ -42,12 +42,19 @@ Things an AI agent **cannot or must not** do on this project. The agent prepares
    git commit -m "Add area-elevation-volume curve (Copernicus + SRTM)" -m "Co-authored-by: Claude <noreply@anthropic.com>"
    ```
 5. Push the branch and open a pull request: `git push -u origin p04-aev-curve` then `gh pr create --fill` (the PR template asks what/why, checks, numbers, AI assistance).
-6. Wait for CI to pass, read the PR once more on GitHub, then merge (squash or merge commit) and `git switch main && git pull`.
+6. Wait for CI to pass, read the PR once more on GitHub, then merge (squash or merge commit; **merge commit** for any PR that is tagged, e.g. `baseline-v1`) and `git switch main && git pull`.
 
 Small doc-only changes can still go straight to `main` if you prefer.
 
 ### Tags / releases
-- [ ] After approving the baseline (prompt 05): `git tag baseline-v1` and `git push origin baseline-v1`.
+- [ ] Baseline v1 (approved 2026-10-10): merge the `p05-baseline-freeze` PR into `main` with **"Create a merge commit"**, not squash. Then tag the merge commit **on `main`**:
+  ```
+  git switch main && git pull
+  python -m thwake baseline --verify        # all frozen files match the manifest
+  git tag -a baseline-v1 -m "Baseline v1: frozen pre-filling baseline (docs/baseline-v1.md)"
+  git push origin baseline-v1
+  ```
+  Why a merge commit: a squash merge replaces the branch commits with one new commit. A merge commit keeps the reviewed commits in `main`'s history, so the tag on `main` points at exactly the files that were reviewed and checksummed.
 - [ ] Optional: a GitHub Release at each phase completion.
 
 > Exception: the scheduled `update.yml` workflow commits refreshed data/media as a bot. That's automation you set up and approved in prompt 11 — not an agent acting on its own.
@@ -77,8 +84,8 @@ Small doc-only changes can still go straight to `main` if you prefer.
 
 - [ ] Verify every value the agent marks ⚠️ (dam coordinates, full supply level, capacity, construction start, impoundment date) — ideally from official documents.
 - [ ] Supply documents the agent can't reach (ESIA PDFs, irrigation command-area boundaries, any in-situ water-quality data).
-- [ ] **Approve the baseline freeze** (prompt 05) — the agent must wait for you.
-- [ ] Change ADR status from "Proposed" to "Accepted" (prompt 91).
+- [x] **Approve the baseline freeze** (prompt 05): approved 2026-10-10, with FSL 912 m and 688 MCM verified against ESIA May 2025 §2.3–2.4.
+- [ ] Change ADR status from "Proposed" to "Accepted" (prompt 91). Done: [ADR 0011](decisions/0011-shared-aev-mask-and-reported-rim-leaks.md) accepted 2026-10-10.
 - [ ] **Confirm the licence** (open question 12). Drafted 2026-10-09: MIT for code (`LICENSE`), CC BY 4.0 for data, figures and docs (`LICENSE-DATA.md`), `CITATION.cff`. Change before committing if you prefer otherwise.
 
 ## H7 — Going public (after prompt 11, and at each seasonal update)

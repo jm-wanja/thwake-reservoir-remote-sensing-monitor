@@ -22,6 +22,7 @@ Earth Engine steps need an authenticated session; check them by running
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
@@ -52,6 +53,13 @@ METHOD_VERSION = "extent-v1"
 METHOD_REF = "docs/methodology.md §1.1–1.2"
 AEV_METHOD_VERSION = "aev-v1"
 AEV_METHOD_REF = "docs/methodology.md §1.3"
+# Version of the frozen baseline these outputs belong to. Whether it is frozen is recorded in
+# docs/baseline-v1.md and by the git tag ``baseline-v1`` (AGENTS.md rule 8), not in the files,
+# so the outputs that are reviewed are byte-for-byte the ones that are frozen.
+BASELINE_VERSION = "v1"
+BASELINE_STATUS = (
+    f"Baseline {BASELINE_VERSION}; freeze status in docs/baseline-{BASELINE_VERSION}.md"
+)
 # Output coordinates are rounded to this grid (~0.1 m), far finer than the 30 m DEM.
 COORD_PRECISION_DEG = 1e-6
 # An output this close to the search-area edge (~110 m, 3–4 DEM pixels) counts as touching.
@@ -380,23 +388,53 @@ def _as_float(value: str) -> float | None:
         return None
 
 
-def fsl_provenance(fsl_m: float, rows: list[dict[str, str]]) -> dict[str, Any]:
-    """Whether the configured FSL is a sourced value or a fallback assumption."""
+def design_verification(cfg: Config) -> dict[str, str] | None:
+    """The author's check of the design figures (``dam.design_figures_verified``), if any.
+
+    Raises:
+        ConfigError: If the entry is present but lacks a date or source.
+    """
+    entry = (cfg.settings.get("dam") or {}).get("design_figures_verified")
+    if entry is None:
+        return None
+    if not isinstance(entry, dict) or not entry.get("date") or not entry.get("source"):
+        raise ConfigError("'design_figures_verified' in settings.yaml dam needs date and source")
+    return {"date": str(entry["date"]), "source": " ".join(str(entry["source"]).split())}
+
+
+def fsl_provenance(
+    fsl_m: float, rows: list[dict[str, str]], verified: dict[str, str] | None = None
+) -> dict[str, Any]:
+    """Whether the configured FSL is a sourced value or a fallback assumption.
+
+    Args:
+        fsl_m: Configured FSL.
+        rows: Rows of ``official_figures.csv``.
+        verified: The author's check of the design figures (:func:`design_verification`);
+            only recorded when the FSL is sourced.
+    """
     matches = [
         r for r in rows if r["item"] == "full_supply_level" and _as_float(r["value"]) == fsl_m
     ]
     if matches:
+        check = (
+            f"human-verified on {verified['date']} against {verified['source']}"
+            if verified
+            else "awaiting human verification (human-steps.md H6)"
+        )
         return {
             "fsl_is_fallback": False,
             "fsl_note": "Design value from official documents (data/external/"
-            "official_figures.csv); awaiting human verification (human-steps.md H6).",
+            f"official_figures.csv); {check}.",
             "fsl_sources": [r["source_url"] for r in matches],
+            "fsl_verified": verified["date"] if verified else None,
         }
     return {
         "fsl_is_fallback": True,
         "fsl_note": "FALLBACK ASSUMPTION: the FSL in config/settings.yaml matches no "
         "full_supply_level in data/external/official_figures.csv.",
         "fsl_sources": [],
+        "fsl_verified": None,
     }
 
 
@@ -637,7 +675,7 @@ def build_extent(
     end_elevations = engine.elevations([wall[0], wall[-1]])
     common = {
         "full_supply_level_m_asl": s.fsl_m,
-        **fsl_provenance(s.fsl_m, rows),
+        **fsl_provenance(s.fsl_m, rows, design_verification(cfg)),
         "dem": s.dem_collection,
         "dem_acquired": engine.acquisition_window(),
         "wall_axis": [[round(x, 5), round(y, 5)] for x, y in s.wall_axis],
@@ -1083,7 +1121,7 @@ def build_aev(cfg: Config, write: bool = True, log: Callable[[str], None] = prin
 
     metadata = {
         "name": "Thwake reservoir area–elevation–volume curve v1",
-        "status": "DRAFT — not frozen. The baseline freeze is prompt 05 (AGENTS.md rule 8).",
+        "status": BASELINE_STATUS,
         "csv": str(s.aev_path.relative_to(REPO_ROOT)),
         "columns": {
             "level_m_asl": "water level, m above sea level (each DEM's own vertical datum)",
@@ -1092,7 +1130,7 @@ def build_aev(cfg: Config, write: bool = True, log: Callable[[str], None] = prin
             "dem_source": "DEM short name (key of 'dems' below)",
         },
         "full_supply_level_m_asl": s.fsl_m,
-        **fsl_provenance(s.fsl_m, rows),
+        **fsl_provenance(s.fsl_m, rows, design_verification(cfg)),
         "level_step_m": s.step_m,
         "max_extent": {
             "path": str(extent.max_extent_path.relative_to(REPO_ROOT)),
@@ -1147,7 +1185,7 @@ def aev_summary(result: AEVResult) -> str:
     if meta["fsl_is_fallback"]:
         lines += ["!" * 72, "WARNING: " + meta["fsl_note"], "!" * 72]
     lines += [
-        f"AEV curve v1 (DRAFT, not frozen) -> {_display_path(result.aev_path)}",
+        f"AEV curve ({BASELINE_STATUS}) -> {_display_path(result.aev_path)}",
         f"  metadata -> {_display_path(result.metadata_path)}; "
         f"figure -> {_display_path(result.figure_path)}",
         f"  FSL {meta['full_supply_level_m_asl']:g} m a.s.l., step {meta['level_step_m']:g} m; "
@@ -1210,3 +1248,112 @@ def aev_summary(result: AEVResult) -> str:
                 f"5–95% {stats['p5_m']:+.1f} to {stats['p95_m']:+.1f} m ({stats['pixels']} px)"
             )
     return "\n".join(lines)
+
+
+# --- Freeze manifest --------------------------------------------------------------------
+
+# ``settings.yaml paths`` keys of every frozen baseline file (AGENTS.md rule 8). The Earth
+# Engine asset cannot be hashed here; its provenance is in before_composite.json.
+FROZEN_PATH_KEYS = (
+    "aoi",
+    "max_extent",
+    "aev_curve",
+    "aev_metadata",
+    "aev_figure",
+    "landcover",
+    "landcover_metadata",
+    "river_channel",
+    "before_composite_metadata",
+    "before_composite_png",
+)
+
+
+def manifest_path(cfg: Config) -> Path:
+    """Path of the freeze manifest (``paths.baseline_manifest``)."""
+    paths = cfg.settings.get("paths") or {}
+    return REPO_ROOT / _require(paths, "baseline_manifest", "settings.yaml paths")
+
+
+def frozen_files(cfg: Config) -> list[Path]:
+    """The frozen baseline files, in :data:`FROZEN_PATH_KEYS` order."""
+    paths = cfg.settings.get("paths") or {}
+    return [REPO_ROOT / _require(paths, key, "settings.yaml paths") for key in FROZEN_PATH_KEYS]
+
+
+def is_frozen(cfg: Config) -> bool:
+    """True once the freeze manifest exists."""
+    return manifest_path(cfg).is_file()
+
+
+def sha256_file(path: Path) -> str:
+    """Hex SHA-256 of a file's bytes."""
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def manifest_text(files: Sequence[Path], root: Path = REPO_ROOT) -> str:
+    """``sha256sum``-format lines (``<hash>  <path relative to root>``) for ``files``.
+
+    Check from the repository root with ``shasum -a 256 -c <manifest>``.
+    """
+    return "".join(f"{sha256_file(p)}  {p.relative_to(root).as_posix()}\n" for p in files)
+
+
+def read_manifest(path: Path) -> dict[str, str]:
+    """Relative path → hash, from a ``sha256sum``-format manifest."""
+    entries: dict[str, str] = {}
+    for line in Path(path).read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            digest, name = line.split(maxsplit=1)
+            entries[name.strip()] = digest
+    return entries
+
+
+def manifest_problems(
+    entries: dict[str, str], files: Sequence[Path], root: Path = REPO_ROOT
+) -> list[str]:
+    """Differences between a manifest and the files on disk (empty if they match).
+
+    Reports files that are missing, changed, or frozen but not listed in the manifest.
+    """
+    problems = []
+    expected = {p.relative_to(root).as_posix(): p for p in files}
+    for name in sorted(set(expected) - set(entries)):
+        problems.append(f"{name}: frozen file not listed in the manifest")
+    for name, digest in entries.items():
+        path = root / name
+        if not path.is_file():
+            problems.append(f"{name}: missing")
+        elif sha256_file(path) != digest:
+            problems.append(f"{name}: changed since the freeze")
+    return problems
+
+
+def write_manifest(cfg: Config) -> Path:
+    """Write the freeze manifest for the current baseline files.
+
+    Raises:
+        BaselineError: If a frozen file does not exist.
+    """
+    files = frozen_files(cfg)
+    missing = [str(p.relative_to(REPO_ROOT)) for p in files if not p.is_file()]
+    if missing:
+        raise BaselineError(f"Cannot freeze, files missing: {', '.join(missing)}")
+    path = manifest_path(cfg)
+    path.write_text(manifest_text(files), encoding="utf-8")
+    return path
+
+
+def verify_manifest(cfg: Config) -> list[str]:
+    """Check the frozen files against the manifest (see :func:`manifest_problems`).
+
+    Raises:
+        BaselineError: If there is no manifest (the baseline is not frozen).
+    """
+    path = manifest_path(cfg)
+    if not path.is_file():
+        raise BaselineError(f"{path.relative_to(REPO_ROOT)} not found: baseline not frozen")
+    return manifest_problems(read_manifest(path), frozen_files(cfg))

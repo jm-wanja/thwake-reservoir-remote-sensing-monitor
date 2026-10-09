@@ -5,7 +5,7 @@ Ongoing project. Phases are sequential in priority but Phase 1 is the most time-
 ## Phase 0 — Planning ✅
 - [x] Project brief, architecture, agent rules, ADRs
 - [ ] Resolve blocking open questions (FSL, dam coordinates, capacity) — see [open-questions.md](open-questions.md)
-  - [x] FSL (912 m a.s.l.), capacity (688 MCM), construction start (27 Mar 2018) — sourced 2026-10-09, awaiting human check (H6)
+  - [x] FSL (912 m a.s.l.), capacity (688 MCM), construction start (27 Mar 2018) — sourced 2026-10-09; FSL and capacity human-verified 2026-10-10 (ESIA §2.3–2.4)
   - [x] Dam-wall coordinates — axis digitised on Sentinel-2 (prompt 03) and human-verified on Google Earth (2026-10-09)
   - [ ] Impoundment start — not started as of 2026-10-09; target end Jan 2027
 - [x] Repository scaffold: package stubs, CLI, config loader + tests, CI (prompt 02, 2026-10-09)
@@ -16,8 +16,8 @@ Ongoing project. Phases are sequential in priority but Phase 1 is the most time-
 ## Phase 1 — Baseline (now, before/at start of filling)
 - [x] AOI + max-extent mask (prompt 03, 2026-10-09): max extent 30.36 km² vs official ~29 km²; awaiting human review
 - [x] AEV curve from Copernicus DEM, cross-checked with SRTM; sanity-checked vs official capacity (prompt 04, 2026-10-09, **draft, not frozen**): volume at FSL 743 MCM (GLO-30, +8%) and 796 MCM (SRTM, +16%) vs design 688 MCM, both inside the 681–825 design-history range; SRTM rim overflows at ≈910 m (below FSL). Awaiting human review
-- [ ] Pre-filling land cover of flood zone; "before" composite; historic river channel
-- [ ] Freeze baseline v1 (tag release `baseline-v1`)
+- [x] Pre-filling land cover of flood zone; "before" composite; historic river channel (prompt 05, 2026-10-09): `python -m thwake baseline` runs every step; write-up in [baseline-v1.md](baseline-v1.md). WorldCover and Dynamic World disagree strongly per class ([open question 23](open-questions.md)), so ranges only
+- [x] Freeze baseline v1: **frozen 2026-10-10** (approved by the author; checksum manifest + CI gate; mask decision [ADR 0011](decisions/0011-shared-aev-mask-and-reported-rim-leaks.md), accepted). Tag `baseline-v1` on `main` after the merge commit (human step H3)
 - **Exit:** baseline files committed + method written up
 
 ## Phase 1.5 — Validation (before Phase 2) — [ADR 0009](decisions/0009-validation-phase.md)

@@ -8,9 +8,29 @@ import click
 
 from thwake import baseline as baseline_steps
 from thwake import ee_auth
-from thwake.config import ConfigError, load_config
+from thwake import reference as reference_steps
+from thwake.config import REPO_ROOT, Config, ConfigError, load_config
 
-BASELINE_STEPS = ["extent", "aev"]
+# In run order: each step reads the outputs of the ones before it. The composite is last
+# because its asset export continues in Earth Engine after the command returns.
+BASELINE_STEPS = ["extent", "aev", "landcover", "river", "composite"]
+
+
+def _run_baseline_step(step: str, cfg: Config) -> str:
+    """Run one baseline step and return its terminal report.
+
+    Functions are looked up on the modules at call time (tests replace them).
+    """
+    b, r, log = baseline_steps, reference_steps, click.echo
+    if step == "extent":
+        return b.summary(b.build_extent(cfg, log=log))
+    if step == "aev":
+        return b.aev_summary(b.build_aev(cfg, log=log))
+    if step == "landcover":
+        return r.landcover_summary(r.build_landcover(cfg, log=log))
+    if step == "river":
+        return r.river_summary(r.build_river(cfg, log=log))
+    return r.composite_summary(r.build_composite(cfg, log=log))
 
 
 def _not_implemented(name: str) -> None:
@@ -28,22 +48,56 @@ def cli() -> None:
 @click.option(
     "--step",
     type=click.Choice(BASELINE_STEPS),
-    required=True,
-    help="Baseline step to run. extent: AOI and max-extent mask (data/baseline/*.geojson). "
-    "aev: area–elevation–volume curve for GLO-30 and SRTM (data/baseline/aev_curve_v1.csv).",
+    default=None,
+    help="Run one step only (default: all, in order). extent: AOI and max-extent mask "
+    "(data/baseline/*.geojson). aev: area–elevation–volume curve (aev_curve_v1.csv). "
+    "landcover: land cover in the max extent (landcover_flood_zone.csv). river: historic "
+    "river channel (river_channel.geojson). composite: Sentinel-2 'before' composite "
+    "(Earth Engine asset + media/before_composite.png).",
 )
-def baseline(step: str) -> None:
-    """Build the frozen baseline: AOI, max-extent mask, AEV curve (Phase 1)."""
+@click.option(
+    "--verify",
+    is_flag=True,
+    help="Check the frozen files against the freeze manifest; run nothing.",
+)
+@click.option(
+    "--write-manifest",
+    is_flag=True,
+    help="Freeze: write the SHA-256 manifest of the current baseline files; run nothing.",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Run steps (or rewrite the manifest) even though the baseline is frozen. Only to "
+    "check reproducibility; changes to a frozen baseline need an ADR and a new version.",
+)
+def baseline(step: str | None, verify: bool, write_manifest: bool, force: bool) -> None:
+    """Build the baseline (Phase 1): extent, AEV curve and pre-filling reference layers."""
+    b = baseline_steps
     try:
         cfg = load_config()
+        if verify:
+            problems = b.verify_manifest(cfg)
+            for problem in problems:
+                click.echo(f"  {problem}")
+            if problems:
+                raise click.ClickException("Baseline files differ from the freeze manifest")
+            click.echo(f"All {len(b.frozen_files(cfg))} frozen baseline files match.")
+            return
+        if b.is_frozen(cfg) and not force:
+            raise click.ClickException(
+                f"The baseline is frozen ({b.manifest_path(cfg).relative_to(REPO_ROOT)}). "
+                "Changes need an ADR and a new version (AGENTS.md rule 8). Use --force only "
+                "to check reproducibility, then restore the frozen files with git."
+            )
+        if write_manifest:
+            click.echo(f"Freeze manifest -> {b.write_manifest(cfg).relative_to(REPO_ROOT)}")
+            return
         ee_auth.initialize(cfg)
-        if step == "extent":
-            report = baseline_steps.summary(baseline_steps.build_extent(cfg, log=click.echo))
-        else:
-            report = baseline_steps.aev_summary(baseline_steps.build_aev(cfg, log=click.echo))
+        for name in [step] if step else BASELINE_STEPS:
+            click.echo(_run_baseline_step(name, cfg))
     except (ConfigError, baseline_steps.BaselineError) as exc:
         raise click.ClickException(str(exc)) from exc
-    click.echo(report)
 
 
 @cli.command()

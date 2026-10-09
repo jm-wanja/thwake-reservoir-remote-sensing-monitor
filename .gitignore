@@ -8,8 +8,10 @@ credentials/
 # definitely not a credential.
 *.json
 !.claude/settings.json
-# AEV-curve metadata written by `thwake baseline --step aev` (no secrets).
+# Baseline metadata written by `thwake baseline` (no secrets).
 !data/baseline/aev_curve_v1.json
+!data/baseline/landcover_flood_zone.json
+!data/baseline/before_composite.json
 
 # --- Large rasters: never commit (AGENTS.md §5.3) ---
 *.tif

@@ -1,0 +1,123 @@
+{
+ "name": "Thwake valley before filling: Sentinel-2 dry-season median composite",
+ "baseline_version": "v1",
+ "asset_id": "projects/thwake-monitor/assets/thwake/before_composite_s2_v1",
+ "export_task_id": "W4JZINKN5GAL6TXQEDGSWC7O",
+ "bands": [
+  "B2",
+  "B3",
+  "B4",
+  "B8",
+  "B11",
+  "B12",
+  "clear_obs"
+ ],
+ "band_notes": "B2, B3, B4, B8, B11, B12: median surface reflectance ×10⁴ (uint16); clear_obs: number of clear observations per pixel",
+ "scale_m": 10.0,
+ "crs": "EPSG:32737",
+ "region": [
+  [
+   [
+    37.756413690772874,
+    -1.809138686349978
+   ],
+   [
+    37.88358630922713,
+    -1.809138686349978
+   ],
+   [
+    37.88358630922713,
+    -1.6622511340519688
+   ],
+   [
+    37.756413690772874,
+    -1.6622511340519688
+   ],
+   [
+    37.756413690772874,
+    -1.809138686349978
+   ]
+  ]
+ ],
+ "window": "2026-06-01/2026-10-01",
+ "granules": 74,
+ "acquisition_dates": 37,
+ "scene_dates": [
+  "2026-06-01",
+  "2026-06-03",
+  "2026-06-06",
+  "2026-06-11",
+  "2026-06-13",
+  "2026-06-16",
+  "2026-06-21",
+  "2026-06-23",
+  "2026-06-26",
+  "2026-07-01",
+  "2026-07-03",
+  "2026-07-06",
+  "2026-07-11",
+  "2026-07-13",
+  "2026-07-16",
+  "2026-07-21",
+  "2026-07-23",
+  "2026-07-26",
+  "2026-07-31",
+  "2026-08-02",
+  "2026-08-05",
+  "2026-08-10",
+  "2026-08-12",
+  "2026-08-15",
+  "2026-08-20",
+  "2026-08-22",
+  "2026-08-25",
+  "2026-08-30",
+  "2026-09-01",
+  "2026-09-04",
+  "2026-09-09",
+  "2026-09-11",
+  "2026-09-14",
+  "2026-09-19",
+  "2026-09-21",
+  "2026-09-24",
+  "2026-09-29"
+ ],
+ "first_image": "2026-06-01",
+ "last_image": "2026-09-29",
+ "tiles": [
+  "37MCT",
+  "37MCU"
+ ],
+ "cloud_score_min": 0.6,
+ "clear_obs_per_pixel": {
+  "min": 8,
+  "p5": 12,
+  "median": 15
+ },
+ "chirps_rain_in_window": {
+  "mean_over_aoi_mm": 7.1,
+  "days_available": 92,
+  "last_day": "2026-08-31",
+  "collection": "UCSB-CHG/CHIRPS/DAILY"
+ },
+ "collections": {
+  "sentinel2_sr": "COPERNICUS/S2_SR_HARMONIZED",
+  "cloud_score_plus": "GOOGLE/CLOUD_SCORE_PLUS/V1/S2_HARMONIZED"
+ },
+ "png": {
+  "path": "media/before_composite.png",
+  "longest_side_px": 1200,
+  "visualisation": {
+   "bands": [
+    "B4",
+    "B3",
+    "B2"
+   ],
+   "min": 200,
+   "max": 2500,
+   "gamma": 1.2
+  },
+  "bytes": 3388947
+ },
+ "method": "docs/methodology.md §1.4",
+ "generated": "2026-10-09"
+}

@@ -61,7 +61,7 @@ Status: **Draft v0.1** (Phase 1 in progress: AOI and max extent implemented) · 
   2. Builds the **max-extent mask**: DEM pixels below FSL that are hydrologically connected to the dam site → the only place water may be counted.
   3. Computes the **Area–Elevation–Volume (AEV) curve** by flooding the DEM in 0.5 m steps.
   4. Captures **pre-filling reference**: land cover of the flood zone (WorldCover / Dynamic World), cloud-free Sentinel-2 composite, historic river channel (JRC GSW).
-- **Outputs (versioned, committed):** `data/baseline/aoi.geojson`, `max_extent.geojson`, `aev_curve_v1.csv`, `landcover_flood_zone.csv`, baseline imagery as an EE asset.
+- **Outputs (versioned, committed):** `data/baseline/aoi.geojson`, `max_extent.geojson`, `aev_curve_v1.csv` (+ `.json`), `landcover_flood_zone.csv` (+ `.json`), `river_channel.geojson`, `before_composite.json`; `media/aev_curve_v1.png`, `media/before_composite.png`; the full composite as an EE asset (`before_composite_s2_v1`). Freeze manifest `data/baseline/baseline_v1.sha256` (checked in CI). Write-up and freeze record: [baseline-v1.md](baseline-v1.md).
 - **Rule:** frozen once filling analysis begins; changes need an ADR and a new version suffix (`_v2`).
 
 ### B. Processing pipeline (Python, `src/thwake/`)
@@ -71,8 +71,9 @@ Modules (one responsibility each):
 |--------|----------------|
 | `config` | Load YAML config (AOI, dates, thresholds, EE collection IDs, capacity). |
 | `baseline` | Phase 1: AOI and max-extent mask (wall barrier, flood fill, rim pass closures); AEV curve per DEM and rim check (Earth Engine side). |
+| `reference` | Phase 1: pre-filling reference layers: land cover in the max extent, Sentinel-2 "before" composite (asset + PNG), JRC river channel. |
 | `ee_auth` | Authenticate (user creds locally, service account in CI). |
-| `collections` | Fetch & filter S1, S2, CHIRPS, ERA5 for AOI/date range; S2 cloud masking. |
+| `collections` | Fetch & filter S1, S2, CHIRPS, ERA5 for AOI/date range; S2 cloud masking (Cloud Score+). |
 | `water_s2` | MNDWI/NDWI → Otsu threshold → water mask. |
 | `water_s1` | Speckle filter → VV backscatter → Otsu / dB threshold → water mask. |
 | `postprocess` | Clip to max-extent, keep component connected to dam, remove specks, gap-fill cloud-obscured edges (optional, see methodology). |

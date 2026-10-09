@@ -1,0 +1,102 @@
+{
+ "name": "Thwake flood zone land cover before filling",
+ "baseline_version": "v1",
+ "csv": "data/baseline/landcover_flood_zone.csv",
+ "columns": {
+  "source": "estimate (see 'sources')",
+  "collection": "Earth Engine collection ID",
+  "period": "ISO 8601 interval the estimate represents (end exclusive for DW)",
+  "class_value": "class code in the source product",
+  "class_name": "class name in the source product",
+  "common_class": "matching Dynamic World class, to compare products",
+  "area_ha": "hectares inside the max extent (pixel centres inside, geodesic area)",
+  "area_pct": "percentage of the max-extent polygon area"
+ },
+ "sources": {
+  "esa_worldcover": "ESA WorldCover v200 map class (10 m)",
+  "dynamic_world_mode": "Dynamic World: most frequent label per pixel over the window"
+ },
+ "published_accuracy": {
+  "esa_worldcover": "76.7% global overall accuracy (WorldCover 2021 v200 validation report)",
+  "dynamic_world": "73.8% agreement with an expert-consensus test set (Brown et al. 2022)"
+ },
+ "uncertainty": "Per common class, the min–max across the two products (different years, methods and class definitions), plus their published accuracies. Not checked on the ground.",
+ "known_issues": [
+  "WorldCover is 2021, three years into construction; Dynamic World is the 2026 dry season. Differences mix real change (clearing, construction) with product differences (e.g. Dynamic World rarely labels dryland grass).",
+  "Dynamic World labels the dry sandy Thwake riverbed and the Athi channel as water; its water class here is river channel, not impounded water."
+ ],
+ "zone": {
+  "path": "data/baseline/max_extent.geojson",
+  "area_km2": 30.36,
+  "level_m_asl": 912.0
+ },
+ "totals_km2": {
+  "esa_worldcover": 30.37,
+  "dynamic_world_mode": 30.36
+ },
+ "worldcover": {
+  "image": "ESA/WorldCover/v200/2021",
+  "period": "2021-01-01/2021-12-31"
+ },
+ "dynamic_world": {
+  "window": "2026-06-01/2026-10-01",
+  "scenes": 18,
+  "scene_dates": [
+   "2026-06-01",
+   "2026-06-06",
+   "2026-06-16",
+   "2026-06-26",
+   "2026-07-03",
+   "2026-07-06",
+   "2026-07-13",
+   "2026-07-16",
+   "2026-07-21",
+   "2026-08-05",
+   "2026-08-10",
+   "2026-08-12",
+   "2026-08-22",
+   "2026-08-25",
+   "2026-09-01",
+   "2026-09-14",
+   "2026-09-19",
+   "2026-09-24"
+  ],
+  "crs": "EPSG:32737"
+ },
+ "by_common_class_ha": {
+  "shrub_and_scrub": {
+   "esa_worldcover": 1183.3,
+   "dynamic_world_mode": 1670.1
+  },
+  "crops": {
+   "esa_worldcover": 853.5,
+   "dynamic_world_mode": 348.1
+  },
+  "grass": {
+   "esa_worldcover": 553.2,
+   "dynamic_world_mode": 0.6
+  },
+  "bare": {
+   "esa_worldcover": 296.1,
+   "dynamic_world_mode": 189.2
+  },
+  "trees": {
+   "esa_worldcover": 106.6,
+   "dynamic_world_mode": 623.8
+  },
+  "water": {
+   "esa_worldcover": 43.1,
+   "dynamic_world_mode": 167.3
+  },
+  "built": {
+   "esa_worldcover": 1.0,
+   "dynamic_world_mode": 31.2
+  },
+  "flooded_vegetation": {
+   "esa_worldcover": 0.0,
+   "dynamic_world_mode": 5.9
+  }
+ },
+ "method": "docs/methodology.md §1.4",
+ "generated": "2026-10-09"
+}

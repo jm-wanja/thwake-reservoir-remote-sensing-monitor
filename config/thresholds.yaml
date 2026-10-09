@@ -21,6 +21,24 @@ baseline:
   pass_closure_radius_m: 150       # AOI only: disk that closes a rim overflow pass (saddle)
   pass_level_tolerance_m: 0.1      # precision of the overflow-level search
   max_pass_closures: 10            # stop with an error rather than close passes indefinitely
+  # Pre-filling reference layers (methodology §1.4), set in prompt 05.
+  composite_cloud_score_min: 0.6   # Cloud Score+ 'cs' ≥ this is clear; as used for the wall
+                                   # digitising composite (prompt 03). Independent of the Phase 2
+                                   # sentinel2.cloud_score_plus_threshold (prompt 06)
+  composite_bands: [B2, B3, B4, B8, B11, B12]  # blue, green, red, NIR, SWIR1, SWIR2: true colour
+                                   # plus what MNDWI/NDVI need; stored as uint16 reflectance ×10⁴
+  composite_scale_m: 10            # native S2 resolution (B11/B12 resampled from 20 m)
+  composite_buffer_m: 1000         # around the AOI bounding box, so the wall and the river
+                                   # just downstream are in the frame
+  composite_png_px: 1200           # longest side of media/before_composite.png (~12 m/pixel)
+  # JRC occurrence = % of valid observations 1984–2021 with water. The Athi here is a narrow,
+  # seasonal river, so 30 m pixels are mixed and occurrence never exceeds ~60% in the AOI
+  # (≥50% keeps only 0.02 km²). 10% traces the channel without the isolated low-occurrence
+  # specks of ≥5%. Areas at the sensitivity levels are reported with the output.
+  river_occurrence_min_pct: 10
+  river_occurrence_sensitivity_pct: [5, 25, 50]
+  landcover_area_tolerance_pct: 2  # class areas (pixel centres in the mask) must sum to the
+                                   # max-extent polygon area within this; more means gaps
 
 sentinel2:
   water_index: MNDWI               # methodology §2.1; NDWI computed for comparison

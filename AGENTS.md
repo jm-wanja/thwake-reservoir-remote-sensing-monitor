@@ -14,8 +14,8 @@ An independent, long-running **satellite record of Thwake Dam reservoir** (Makue
 
 ## 3. Current status
 
-- Phase: **1 — Baseline, in progress.** AOI and max-extent mask done (prompt 03): `python -m thwake baseline --step extent` → `data/baseline/{aoi,max_extent}.geojson`. AEV curve drafted, not frozen (prompt 04): `python -m thwake baseline --step aev` → `data/baseline/aev_curve_v1.{csv,json}`, `media/aev_curve_v1.png`.
-- Next: baseline freeze (`/05-phase1-baseline-freeze`), then **Phase 1.5 — Validation** (`/05a`–`/05c`, [ADR 0009](docs/decisions/0009-validation-phase.md)) before Phase 2 — see [docs/roadmap.md](docs/roadmap.md).
+- Phase: **1 — Baseline, complete. Baseline v1 FROZEN on 2026-10-10** (approved by the author): AOI and max extent, AEV curve (GLO-30 + SRTM), land cover, river channel, "before" composite (+ EE asset `before_composite_s2_v1`). Built by `python -m thwake baseline`. Write-up and freeze record: [docs/baseline-v1.md](docs/baseline-v1.md). Checksums: `data/baseline/baseline_v1.sha256`, enforced in CI by `tests/test_freeze.py`; `thwake baseline` refuses to overwrite frozen files without `--force`. **Do not change any frozen file:** changes need an ADR and a `v2` (rule 8). Tag `baseline-v1` is created by the author on `main` after the PR is merged.
+- Next: **Phase 1.5 — Validation** (`/05a`–`/05c`, [ADR 0009](docs/decisions/0009-validation-phase.md)) before Phase 2 — see [docs/roadmap.md](docs/roadmap.md).
 - Engineering quality backlog (tests, CI, provenance, validation, ML comparison): [docs/engineering-roadmap.md](docs/engineering-roadmap.md).
 - Do not start a later phase's work before the earlier phase's exit criteria are met unless an ADR says otherwise.
 
@@ -33,6 +33,7 @@ An independent, long-running **satellite record of Thwake Dam reservoir** (Makue
 | Max extent | Wall-as-barrier + rim-pass closure; Copernicus GLO-30 2024_1 | [0008](docs/decisions/0008-max-extent-method-and-dem-release.md) |
 | Validation | Reference reservoir + labelled shorelines + `thwake evaluate` gate | [0009](docs/decisions/0009-validation-phase.md) |
 | Repo layout | Root `AGENTS.md`, `docs/`, prompts as `.claude/commands/` | [0010](docs/decisions/0010-repository-layout.md) |
+| AEV mask | One GLO-30 max-extent mask for both DEMs; rim leaks reported, not re-masked | [0011](docs/decisions/0011-shared-aev-mask-and-reported-rim-leaks.md) |
 
 Do not introduce new frameworks, paid services, or servers without a new ADR.
 
